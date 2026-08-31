@@ -13,7 +13,7 @@
 
 <br>
 
-<a href="#quick-start">Quick Start</a> · <a href="#deployment-options">Deployment</a> · <a href="#online-updates">Updates</a> · <a href="docs/OPERATIONS.md">Operations</a> · <a href="https://github.com/Star-Moon10/Student-Management-System/issues">Issue Tracker</a>
+<a href="#quick-start">Quick Start</a> · <a href="#deployment-options">Deployment</a> · <a href="#online-updates">Updates</a> · <a href="docs/README.en.md">Documentation</a> · <a href="https://github.com/Star-Moon10/Student-Management-System/issues">Issue Tracker</a>
 
 </div>
 
@@ -165,9 +165,10 @@ Only Windows local deployments use the in-app updater. After an administrator co
 ## Documentation
 
 - [Chinese README](README.md)
+- [Documentation center](docs/README.en.md)
 - [Operations and migration](docs/OPERATIONS.md)
 - [Production deployment](docs/PRODUCTION.md)
-- [Release and online updates](docs/RELEASING.md)
+- [Release and online updates](docs/RELEASING.en.md)
 - [Release history](https://github.com/Star-Moon10/Student-Management-System/releases)
 
 Use the documents above for detailed deployment, configuration, and maintenance procedures.

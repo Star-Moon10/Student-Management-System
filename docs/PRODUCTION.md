@@ -1,5 +1,7 @@
 # Production Deployment
 
+**[中文](PRODUCTION.zh-CN.md)**
+
 This service can move from the bundled SQLite database to MySQL without changing the application code. Keep the project folder, `data`, `storage`, `backups`, `exports`, `.env`, and the model files together when moving an existing installation.
 
 ## Required environment settings

@@ -1,5 +1,7 @@
 # Student Management System Operations
 
+**[中文](OPERATIONS.zh-CN.md)**
+
 ## New machine checklist
 
 1. Copy the complete project directory, including `.env`, `data`, `storage`, `exports`, `backups`, `models`, and `tools`.

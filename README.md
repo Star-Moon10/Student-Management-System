@@ -13,7 +13,7 @@
 
 <br>
 
-<a href="#快速开始">快速开始</a> · <a href="#部署方式">部署方式</a> · <a href="#在线更新">在线更新</a> · <a href="docs/OPERATIONS.md">运维文档</a> · <a href="https://github.com/Star-Moon10/Student-Management-System/issues">问题反馈</a>
+<a href="#快速开始">快速开始</a> · <a href="#部署方式">部署方式</a> · <a href="#在线更新">在线更新</a> · <a href="docs/README.md">文档中心</a> · <a href="https://github.com/Star-Moon10/Student-Management-System/issues">问题反馈</a>
 
 </div>
 
@@ -156,7 +156,7 @@ AI_ENABLED=false
 
 ## 部署提示
 
-复制 `.env.example` 为 `.env` 后，至少替换 `JWT_SECRET`。生产环境需要 HTTPS、独立备份和受控访问。数据库、原始资料和备份目录都属于重要资产，迁移系统时必须一起保留。详细配置说明见 [运维与迁移指南](docs/OPERATIONS.md)。
+复制 `.env.example` 为 `.env` 后，至少替换 `JWT_SECRET`。生产环境需要 HTTPS、独立备份和受控访问。数据库、原始资料和备份目录都属于重要资产，迁移系统时必须一起保留。详细配置说明见 [运维与迁移指南](docs/OPERATIONS.zh-CN.md)。
 
 ## 在线更新
 
@@ -174,8 +174,9 @@ AI_ENABLED=false
 ## 项目文档
 
 - [英文 README](README.en.md)
-- [运维与迁移指南](docs/OPERATIONS.md)
-- [生产部署说明](docs/PRODUCTION.md)
+- [文档中心](docs/README.md)
+- [运维与迁移指南](docs/OPERATIONS.zh-CN.md)
+- [生产部署说明](docs/PRODUCTION.zh-CN.md)
 - [发布与在线更新](docs/RELEASING.md)
 - [更新记录](https://github.com/Star-Moon10/Student-Management-System/releases)
 
