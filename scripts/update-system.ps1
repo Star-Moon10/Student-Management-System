@@ -19,6 +19,18 @@ function Write-UpdateStatus {
   Move-Item -LiteralPath $temporary -Destination $StatusPath -Force
 }
 
+function Write-UpdateTransaction {
+  param([hashtable]$Transaction)
+  $Transaction.updated_at = (Get-Date).ToString('yyyy-MM-ddTHH:mm:ss.fffK')
+  $temporary = "$TransactionPath.tmp"
+  $Transaction | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $temporary -Encoding UTF8
+  Move-Item -LiteralPath $temporary -Destination $TransactionPath -Force
+}
+
+function Remove-UpdateTransaction {
+  Remove-Item -LiteralPath $TransactionPath -Force -ErrorAction SilentlyContinue
+}
+
 function Assert-ProjectChild {
   param([string]$PathValue)
   $resolved = [IO.Path]::GetFullPath($PathValue)
@@ -127,7 +139,11 @@ $StageDirectory = Assert-ProjectChild (Join-Path $JobDirectory 'stage')
 $PackagePath = Assert-ProjectChild (Join-Path $JobDirectory 'student-management-update.zip')
 $DatabasePath = Join-Path $ProjectRoot 'data\student_management.db'
 $DatabaseRollbackPath = Join-Path $RollbackDirectory 'student_management.db'
+$TransactionPath = Assert-ProjectChild (Join-Path $ProjectRoot 'run\update-transaction.json')
+$RecoverySource = Assert-ProjectChild (Join-Path $ProjectRoot 'scripts\recover-interrupted-update.py')
+$RecoveryRuntime = Assert-ProjectChild (Join-Path $ProjectRoot 'run\update-recovery.py')
 $serverStopped = $false
+$transaction = $null
 
 try {
   Write-UpdateStatus 'downloading' '正在获取更新包并校验 SHA-256' 10
@@ -177,14 +193,29 @@ try {
   Write-UpdateStatus 'backing_up' '正在保存更新前代码和数据库副本' 40
   New-Item -ItemType Directory -Force -Path $RollbackDirectory | Out-Null
   Copy-AllowedRuntime $ProjectRoot $RollbackDirectory
+  if (Test-Path -LiteralPath $RecoverySource) { Copy-Item -LiteralPath $RecoverySource -Destination $RecoveryRuntime -Force }
+  $transaction = [ordered]@{
+    format = 1
+    job_id = [string]$job.job_id
+    state = 'prepared'
+    project_root = $ProjectRoot
+    rollback_directory = $RollbackDirectory
+    database_path = $DatabasePath
+    database_rollback_path = $DatabaseRollbackPath
+  }
+  Write-UpdateTransaction $transaction
 
   Write-UpdateStatus 'applying' '正在停止服务并替换程序文件' 55
+  $transaction.state = 'applying'
+  Write-UpdateTransaction $transaction
   Stop-ManagedServer
   $serverStopped = $true
   if (Test-Path -LiteralPath $DatabasePath) { Copy-Item -LiteralPath $DatabasePath -Destination $DatabaseRollbackPath -Force }
   Replace-Runtime $StageDirectory
 
   Write-UpdateStatus 'installing' '正在更新依赖并升级数据库结构' 70
+  $transaction.state = 'installing'
+  Write-UpdateTransaction $transaction
   $Python = Join-Path $ProjectRoot '.venv\Scripts\python.exe'
   if (-not (Test-Path -LiteralPath $Python)) { throw '未找到项目虚拟环境，请先运行 setup.bat' }
   & $Python -m pip install --disable-pip-version-check -r (Join-Path $ProjectRoot 'requirements.lock')
@@ -195,14 +226,21 @@ try {
   if ($LASTEXITCODE -ne 0) { throw '数据库升级失败' }
 
   Write-UpdateStatus 'restarting' '正在重新启动服务并等待健康检查' 88
+  $transaction.state = 'restarting'
+  Write-UpdateTransaction $transaction
   Start-ManagedServer
   Wait-ForHealth
+  Remove-UpdateTransaction
   Write-UpdateStatus 'completed' ("已更新至 v" + [string]$manifest.version) 100
   exit 0
 } catch {
   $failure = $_.Exception.Message
   Write-UpdateStatus 'rolling_back' '更新失败，正在恢复上一版本' 92 $failure
   try {
+    if ($transaction) {
+      $transaction.state = 'rolling_back'
+      Write-UpdateTransaction $transaction
+    }
     if ($serverStopped) { Stop-ManagedServer }
     if (Test-Path -LiteralPath $RollbackDirectory) {
       Replace-Runtime $RollbackDirectory
@@ -213,6 +251,7 @@ try {
       }
       Start-ManagedServer
       Wait-ForHealth
+      Remove-UpdateTransaction
       Write-UpdateStatus 'rolled_back' '更新失败，已自动恢复上一版本' 100 $failure
     } else {
       Write-UpdateStatus 'failed' '更新失败，未找到代码回滚副本' 100 $failure

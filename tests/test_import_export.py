@@ -1,8 +1,10 @@
 import asyncio
 import hashlib
+import importlib.util
 import json
 from datetime import datetime, timedelta, timezone
 from io import BytesIO
+from pathlib import Path
 from types import SimpleNamespace
 from zipfile import ZipFile
 
@@ -36,6 +38,13 @@ from app.services.quality import run_quality_scan
 from app.services.governance import merge_students, rollback_import_batch, rollback_related_info_batch
 from app.services import monitoring
 from app.services import updates
+
+
+RECOVERY_SCRIPT = Path(__file__).resolve().parents[1] / "scripts" / "recover-interrupted-update.py"
+RECOVERY_SPEC = importlib.util.spec_from_file_location("update_recovery", RECOVERY_SCRIPT)
+assert RECOVERY_SPEC and RECOVERY_SPEC.loader
+update_recovery = importlib.util.module_from_spec(RECOVERY_SPEC)
+RECOVERY_SPEC.loader.exec_module(update_recovery)
 
 
 @pytest.fixture()
@@ -191,6 +200,45 @@ def test_update_notice_exposes_only_safe_progress_to_authenticated_users(monkeyp
         "progress": 70,
         "updated_at": "2026-09-01T01:00:00+08:00",
     }
+
+
+def test_startup_recovery_restores_an_interrupted_update(tmp_path):
+    root = tmp_path / "project"
+    rollback = root / "run" / "updates" / "job" / "rollback"
+    for directory in ("app", "scripts", "docs"):
+        (root / directory).mkdir(parents=True, exist_ok=True)
+        (root / directory / "marker.txt").write_text("new", encoding="utf-8")
+        (rollback / directory).mkdir(parents=True, exist_ok=True)
+        (rollback / directory / "marker.txt").write_text("old", encoding="utf-8")
+    (root / "start-system.bat").write_text("new-start", encoding="utf-8")
+    (rollback / "start-system.bat").write_text("old-start", encoding="utf-8")
+    (root / "data").mkdir(parents=True)
+    (root / "data" / "student_management.db").write_text("new-database", encoding="utf-8")
+    database_rollback = rollback / "student_management.db"
+    database_rollback.write_text("old-database", encoding="utf-8")
+    transaction_path = root / "run" / "update-transaction.json"
+    transaction_path.write_text(
+        json.dumps(
+            {
+                "format": 1,
+                "state": "installing",
+                "job_id": "job-1",
+                "rollback_directory": str(rollback),
+                "database_path": str(root / "data" / "student_management.db"),
+                "database_rollback_path": str(database_rollback),
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    result = update_recovery.recover_interrupted_update(root)
+
+    assert result == {"recovered": True, "database_restored": True, "job_id": "job-1"}
+    assert (root / "app" / "marker.txt").read_text(encoding="utf-8") == "old"
+    assert (root / "start-system.bat").read_text(encoding="utf-8") == "old-start"
+    assert (root / "data" / "student_management.db").read_text(encoding="utf-8") == "old-database"
+    assert not transaction_path.exists()
+    assert json.loads((root / "run" / "update-status.json").read_text(encoding="utf-8"))["state"] == "rolled_back"
 
 
 def test_json_timestamp_normalization_adds_the_china_offset_once():
