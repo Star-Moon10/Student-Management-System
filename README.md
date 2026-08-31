@@ -1,59 +1,137 @@
 # Student Management System
 
-A secure, locally deployable student information management system. It supports Excel import/upsert with cell-level provenance, Word extraction with a local AI review workflow, audited manual edits, XLSX exports, role-based access, and a local Ollama assistant. The web UI also provides cascaded filters, saved filters, export previews, template history, related-import rollback, per-student batch editing, backup validation drills, and administrator-only AI/audit visibility.
+[![Release](https://img.shields.io/github/v/release/Star-Moon10/Student-Management-System?display_name=tag&label=Release)](https://github.com/Star-Moon10/Student-Management-System/releases)
+[![Validation](https://github.com/Star-Moon10/Student-Management-System/actions/workflows/validate.yml/badge.svg)](https://github.com/Star-Moon10/Student-Management-System/actions/workflows/validate.yml)
+[![License](https://img.shields.io/badge/license-Restricted%20Use-b42318)](LICENSE)
 
-## Quick start
+面向学校档案管理场景的本地部署学生信息管理系统。系统围绕学生主档案、原始资料、相关信息审核、数据导出、审计回溯和只读 AI 数据助手构建，适合由学校教师、普通管理员和超级管理员在受控环境中协作使用。
 
-1. Copy `.env.example` to `.env` and replace `JWT_SECRET` with a long random value.
-2. Start MySQL and the application with `docker compose up --build`.
-3. Create or change the single super administrator: `docker compose exec app python -m app.seed_admin --username admin`.
-4. Visit `http://localhost:8100` and sign in.
+> **授权声明**：本仓库公开源码仅用于评估、审阅、安全检查和经授权的开发。**未经版权人书面许可，任何个人或组织不得使用、部署、复制、修改、分发或以其他方式利用本系统及其衍生成果。**详见 [LICENSE](LICENSE)。
 
-For a no-Docker development start, create a virtual environment, run `pip install -e .[dev]`, set `DATABASE_URL=sqlite:///./data/student_management.db`, then run `uvicorn app.main:app --reload`.
+## 目录
 
-On a new Windows computer, run `setup.bat` once to create the virtual environment, install dependencies, initialize the local database, and configure the copied local AI model when available. For normal use afterwards, double-click `start-system.bat` to start the server and open the browser. Use `stop-system.bat` to close the tracked server process.
+- [核心能力](#核心能力)
+- [角色与数据边界](#角色与数据边界)
+- [快速开始](#快速开始)
+- [在线更新](#在线更新)
+- [安全与运维](#安全与运维)
+- [开发与发布](#开发与发布)
+- [项目文档](#项目文档)
+- [许可与免责声明](#许可与免责声明)
 
-## Controlled online updates
+## 核心能力
 
-The system settings page contains a controlled update panel for administrators and super administrators. It checks the public GitHub Release feed at `Star-Moon10/Student-Management-System`, downloads only the signed-by-checksum release package, validates the manifest and every included file, creates a database backup, then restarts the local service. An online update requires a super administrator credential and the phrase `确认更新系统`.
+| 模块 | 能力 |
+| --- | --- |
+| 学生档案 | 服务端分页、级联筛选、批量导出、字段来源、版本历史与中国标准时间线。 |
+| 数据导入 | Excel 字段映射、预检、样本预览、冲突对比、错误行重试与批次撤回。 |
+| 相关资料 | Excel 原始行卡片、Word 本地 AI 识别、人工匹配与批量审核。 |
+| 权限管理 | 超级管理员、管理员、教师三级权限，以及学校、学院、专业、班级数据范围。 |
+| 审计与恢复 | 操作审计、可撤回变更、自动备份、恢复演练、原始资料库与回收站。 |
+| AI 数据助手 | 自然语言查询、统计和受控导出；AI 仅读取授权范围内的数据，不能写入数据库。 |
+| 在线更新 | GitHub Release 校验、更新前备份、独立更新器、失败回滚与离线更新包。 |
 
-Only the source whitelist (`app`, `scripts`, `docs`, and selected root files) is updated. `.env`, accounts, `data`, `storage`, `exports`, `backups`, `models`, `tools`, `resource`, `run`, and `.venv` stay local and are never included in GitHub releases. Super administrators can change the repository/channel and optionally keep an encrypted GitHub token for private releases. The same control also accepts a locally built offline ZIP package.
+## 角色与数据边界
 
-To publish a version, run `python scripts/build_release.py` from a clean source checkout, attach the generated `student-management-update.zip` and `.sha256` files to a GitHub Release whose tag is newer than `VERSION`. The build refuses runtime data or secret-like content before it writes the package.
+| 角色 | 主要职责 | 可见范围 |
+| --- | --- | --- |
+| 教师 | 查询授权学生、导出、导入并审核本人提交的相关资料。 | 仅账号数据范围内的学生。 |
+| 管理员 | 管理教师账号和数据范围，处理教师层面的审计、导入和日常运维。 | 教师层级及其授权数据。 |
+| 超级管理员 | 管理全部账号、系统控制、备份恢复、高危设置、更新来源与全量审计。 | 全部系统数据与记录。 |
 
-## Project-local AI
+数据范围由学校、学院、专业和班级规则组成。教师和管理员在访问学生详情、来源文件、时间线、导出和 AI 查询时，都会自动受同一范围约束。
 
-Run `powershell -ExecutionPolicy Bypass -File scripts\setup-project-ai.ps1` once after cloning or migrating the project. It installs the Ollama Windows runtime into `tools\ollama`, imports the supplied GGUF model, and creates the CUDA-targeted `student-qwen-cuda:latest` configuration in `models\ollama`. These folders are intentionally ignored by Git because they are large binaries, but copying the whole project directory preserves them. `start-system.bat` and `stop-system.bat` start and stop the project-local AI service automatically.
+## 快速开始
 
-## Local AI
+### Windows 本地部署
 
-Install Ollama on the host and pull the recommended model:
+适用于学校办公室电脑或局域网服务器的常规部署。
+
+1. 将完整项目目录复制到目标电脑；迁移已有系统时必须同时保留 `.env`、`data`、`storage`、`backups`、`models` 和 `tools`。
+2. 首次运行 `setup.bat`。它会创建虚拟环境、安装依赖并保留现有账号和数据库。
+3. 日常运行 `start-system.bat`，浏览器将打开 `http://127.0.0.1:8100`。
+4. 需要停止服务时运行 `stop-system.bat`。
+
+`start-system.bat` 默认只绑定本机地址。需要由其他电脑访问时，请在反向代理后提供 HTTPS，而不是直接暴露数据库或本地模型服务。
+
+### Docker Compose
+
+适用于已有 Docker 运维能力的环境。
 
 ```powershell
-ollama pull qwen2.5:7b-instruct-q5_0
+Copy-Item .env.example .env
+# 编辑 .env：至少替换 JWT_SECRET，并确认数据库配置
+docker compose up --build -d
+docker compose exec app python -m app.seed_admin --username admin
 ```
 
-The application uses the model only to produce a constrained JSON tool request or a Word-import extraction candidate. Database queries, exports, updates, and permission checks stay in the server. If Ollama is unavailable, normal management features continue working and Word imports are queued for manual review.
+默认访问地址为 `http://localhost:8100`。生产环境必须配置 `ENVIRONMENT=production`、`COOKIE_SECURE=true` 和 HTTPS 反向代理。
 
-## Security model
+### 本地 AI
 
-- Passwords use Argon2id; failed sign-in attempts are rate limited and temporarily lock an account.
-- Login sessions use signed, short-lived JWTs in HttpOnly cookies plus CSRF protection. Set `COOKIE_SECURE=true` behind HTTPS.
-- TLS termination belongs in a reverse proxy such as Nginx or Caddy in production. Never expose MySQL or Ollama to the public internet.
-- Uploaded originals are stored by content hash; every import, edit and export is written to the audit log.
-- AI cannot execute arbitrary SQL or mutate student records. Import candidates require review before they are applied.
-- The browser logs out after five minutes without user activity; background status polling does not keep an idle session alive.
-- Generated export files can be previewed before creation and cleaned by retention period from the super administrator settings.
-- Every student changed by a batch edit gets an independent version and reversible `update` audit record.
+本项目支持项目内隔离的 Ollama 运行时。迁移已有模型时保留 `models` 与 `tools`；新环境可在模型文件到位后运行：
 
-## Production transport and migration
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\setup-project-ai.ps1
+```
 
-The bundled `start-system.bat` intentionally binds to `127.0.0.1` and uses HTTP for local operation. For a server reachable by other machines, put the app behind a TLS reverse proxy and keep Uvicorn, MySQL, and Ollama on private addresses. Set `ENVIRONMENT=production`, `COOKIE_SECURE=true`, and a new long `JWT_SECRET`; the app will redirect HTTP to HTTPS and will not start with the development secret.
+AI 不可用时，学生档案、导入、审核、导出和审计功能仍可使用；Word 相关资料会进入人工处理流程。
 
-When moving to another computer, copy `.env`, `data`, `storage`, `exports`, `backups`, `models`, and `tools` together with the application. Run `setup.bat` once, then use `start-system.bat` normally. `setup.bat` keeps an existing `.env` and database; it does not reset accounts or student records.
+## 在线更新
 
-See [docs/OPERATIONS.md](docs/OPERATIONS.md) for the reverse proxy checklist, backup recovery drill, offline AI setup, retention housekeeping, and post-migration verification.
+管理员和超级管理员每次登录后会自动检查受控 GitHub Release。发现新版本时，系统仅显示“查看并安装”选项，不会自动下载、替换文件或重启服务。
 
-## Limits of this version
+安装更新时需要：
 
-Excel `.xlsx` and Word `.docx` are accepted. Legacy `.xls`/`.doc` must be converted before upload. Add an antivirus scanner and object storage encryption before handling high-sensitivity production data.
+1. 管理员主动点击安装。
+2. 输入任一超级管理员账号和密码。
+3. 输入确认口令 `确认更新系统`。
+
+更新器会下载 ZIP 与 SHA-256 校验文件、验证 `manifest.json` 与每个文件哈希、创建更新前数据库备份、替换代码白名单、安装依赖并执行健康检查。失败时会自动尝试回滚代码与数据库副本。
+
+更新过程不会覆盖或上传 `.env`、账号、`data`、`storage`、`exports`、`backups`、`models`、`tools`、`resource`、`run` 或 `.venv`。管理员也可以在系统设置使用离线更新包。
+
+## 安全与运维
+
+- 密码使用 Argon2id 哈希；登录失败会限流并临时锁定账号。
+- 会话使用 HttpOnly Cookie、JWT 与 CSRF 校验；无操作五分钟后自动退出。
+- 学生敏感字段、原始文件下载、来源版本和 AI 查询都会执行数据范围校验。
+- 导入、审核、导出、登录、系统设置和 AI 调用均会留下审计记录。
+- AI 只能生成受约束的查询、统计和导出计划；涉及数据库修改时必须由人工在页面中执行。
+- 发布构建会拒绝把密钥、账号、数据库、原始资料、备份和本地模型写入 GitHub 或更新 ZIP。
+
+部署、TLS、备份恢复与迁移检查见 [docs/OPERATIONS.md](docs/OPERATIONS.md)。
+
+## 开发与发布
+
+### 本地开发
+
+```powershell
+py -3.12 -m venv .venv
+.\.venv\Scripts\python -m pip install -e '.[dev]'
+$env:DATABASE_URL = 'sqlite:///./data/student_management.db'
+.\.venv\Scripts\python -m uvicorn app.main:app --reload --port 8100
+```
+
+### 发布受控更新包
+
+```powershell
+python scripts\audit_public_source.py
+python -m pytest -q
+python scripts\build_release.py --output dist
+```
+
+更新 `VERSION` 后，创建同名 Git 标签，例如 `v2026.09.0`。GitHub Actions 会执行源码审计、测试和更新包构建，再将 ZIP 与 SHA-256 发布到 Release。详细流程见 [docs/RELEASING.md](docs/RELEASING.md)。
+
+## 项目文档
+
+- [运维与迁移指南](docs/OPERATIONS.md)
+- [生产部署说明](docs/PRODUCTION.md)
+- [发布与在线更新](docs/RELEASING.md)
+- [更新记录](https://github.com/Star-Moon10/Student-Management-System/releases)
+
+## 许可与免责声明
+
+本项目不是自由软件或开源软件许可项目。源码可见不代表获得使用、部署或二次开发许可。未经 StarMoon 事先书面授权，禁止任何形式的使用或传播。
+
+系统涉及学生个人信息。授权使用者仍须自行遵守适用的数据保护、网络安全、教育管理和学校内部制度要求，并完成备份、访问控制、日志留存和安全评估。

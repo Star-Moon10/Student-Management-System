@@ -1,4 +1,4 @@
-const state = { user: null, students: [], selectedStudentIds: new Set(), selectedRelatedCandidateIds: new Set(), studentPage: 1, studentPageSize: 50, studentTotalPages: 1, currentStudent: null, administrators: [], currentAdministrator: null, savedStudentFilters: [], activeView: 'dashboard', aiConversationId: null, aiSuggestionRequest: 0, highRiskApproval: null, excelPreview: null, importTemplates: [], exportTemplates: [], pendingExport: null, importReportCache: {}, importReportHideTimer: null, importReportTrigger: null, passwordPrompted: false, idleLogoutTimer: null, idleLogoutStarted: false, lastActivityAt: 0, dataScopePreviewTimer: null, dataScopePreviewRequest: 0, latestSystemUpdate: null, systemUpdateTimer: null };
+const state = { user: null, students: [], selectedStudentIds: new Set(), selectedRelatedCandidateIds: new Set(), studentPage: 1, studentPageSize: 50, studentTotalPages: 1, currentStudent: null, administrators: [], currentAdministrator: null, savedStudentFilters: [], activeView: 'dashboard', aiConversationId: null, aiSuggestionRequest: 0, highRiskApproval: null, excelPreview: null, importTemplates: [], exportTemplates: [], pendingExport: null, importReportCache: {}, importReportHideTimer: null, importReportTrigger: null, passwordPrompted: false, idleLogoutTimer: null, idleLogoutStarted: false, lastActivityAt: 0, dataScopePreviewTimer: null, dataScopePreviewRequest: 0, latestSystemUpdate: null, systemUpdateTimer: null, systemUpdateAutoChecked: false };
 const IDLE_LOGOUT_TIMEOUT_MS = 5 * 60 * 1000;
 const titles = {
   dashboard: ['工作台', '概览'],
@@ -616,7 +616,7 @@ function renderSystemUpdate(data) {
   const progress = Math.max(0, Math.min(100, Number(updateStatus.progress || 0)));
   summary.innerHTML = `<div class="system-update-current"><span>当前版本</span><strong>${escapeHTML(data.current_version || configuration.current_version || '-')}</strong></div><div class="system-update-current"><span>更新来源</span><strong>${escapeHTML(configuration.repository || '未配置')}</strong><small>${escapeHTML(configuration.channel === 'beta' ? '测试通道' : '稳定通道')}${configuration.has_token ? ' · 已配置访问令牌' : ''}</small></div><div class="system-update-current update-status-${escapeHTML(statusState)}"><span>${escapeHTML(systemUpdateStateLabel(statusState))}</span><strong>${progress}%</strong><small>${escapeHTML(updateStatus.message || '等待管理员操作')}</small></div>`;
   if (!state.latestSystemUpdate) {
-    releaseNode.innerHTML = '<p class="source-empty">点击“检查更新”后，系统将从受控 GitHub Release 获取可安装版本。</p>';
+    releaseNode.innerHTML = '<p class="source-empty">登录后会自动检查更新；也可以手动重新检查受控 GitHub Release。</p>';
   } else if (!release) {
     releaseNode.innerHTML = `<p class="source-empty">${escapeHTML(state.latestSystemUpdate.message || '暂未找到可用更新版本。')}</p>`;
   } else {
@@ -642,11 +642,32 @@ function renderSystemUpdate(data) {
   refreshIcons();
 }
 
-async function loadSystemUpdate(check = false) {
+function openSystemUpdateAvailableDialog(release) {
+  const dialog = document.querySelector('#system-update-available-dialog');
+  if (!dialog || dialog.open) return;
+  document.querySelector('#system-update-available-version').textContent = release.name || release.tag_name || '新版本';
+  document.querySelector('#system-update-available-detail').textContent = `发现 ${release.tag_name || '新版本'}，下载包已具备 SHA-256 校验。安装前会自动备份，账号和学生资料不会被替换。`;
+  dialog.showModal();
+  refreshIcons();
+}
+
+async function loadSystemUpdate(check = false, background = false) {
   const data = await api('/api/system/updates');
-  if (check) state.latestSystemUpdate = await api('/api/system/updates/check', {method:'POST'});
+  if (check) state.latestSystemUpdate = await api(`/api/system/updates/check${background ? '?background=true' : ''}`, {method:'POST'});
   renderSystemUpdate(data);
   return data;
+}
+
+async function autoCheckSystemUpdate() {
+  if (state.systemUpdateAutoChecked || !['super_admin', 'admin'].includes(state.user?.role)) return;
+  state.systemUpdateAutoChecked = true;
+  try {
+    await loadSystemUpdate(true, true);
+    const release = state.latestSystemUpdate?.release;
+    if (release?.update_ready && release?.is_newer) openSystemUpdateAvailableDialog(release);
+  } catch (_) {
+    // Automatic checks stay quiet. Manual checks still surface connection details.
+  }
 }
 
 async function saveSystemUpdateConfiguration(event) {
@@ -2527,6 +2548,12 @@ function bindEvents() {
   document.querySelector('#system-update-config-form').addEventListener('submit', saveSystemUpdateConfiguration);
   document.querySelector('#system-update-execute-form').addEventListener('submit', startSystemUpdate);
   document.querySelector('#system-update-offline-form').addEventListener('submit', startOfflineSystemUpdate);
+  document.querySelector('#system-update-available-later').addEventListener('click', () => document.querySelector('#system-update-available-dialog').close());
+  document.querySelector('#system-update-available-install').addEventListener('click', () => {
+    document.querySelector('#system-update-available-dialog').close();
+    setView('settings');
+    window.setTimeout(() => document.querySelector('#system-update-section')?.scrollIntoView({behavior:'smooth', block:'start'}), 120);
+  });
   document.querySelector('#open-high-risk-settings').addEventListener('click', openHighRiskSettings);
   document.querySelector('#high-risk-auth-form').addEventListener('submit', authorizeHighRiskSettings);
   document.querySelector('#high-risk-clear-students').addEventListener('click', clearAllStudentsHighRisk);
@@ -2583,6 +2610,7 @@ async function boot() {
     const loginNotice = window.sessionStorage.getItem('login-security-notice');
     if (loginNotice) { window.sessionStorage.removeItem('login-security-notice'); toast(loginNotice); }
     await Promise.all([refreshAll(), loadAiStatus(), loadAiConversation(), loadSavedStudentFilters()]);
+    void autoCheckSystemUpdate();
     window.setInterval(loadAiStatus, 30000);
     refreshIcons();
   } catch (errorObject) {

@@ -3998,19 +3998,21 @@ def check_system_update(
     request: Request,
     db: Session = Depends(get_db),
     user: User = Depends(require_roles(Role.SUPER_ADMIN, Role.ADMIN)),
+    background: bool = False,
 ) -> dict[str, Any]:
     require_csrf(request)
     result = check_for_update(db)
-    audit(
-        db,
-        "check_system_update",
-        "system_update",
-        result.get("release", {}).get("tag_name") if isinstance(result.get("release"), dict) else "none",
-        actor=user,
-        after={"configured": result.get("configured"), "repository": result.get("repository"), "release": result.get("release", {}).get("tag_name") if isinstance(result.get("release"), dict) else None},
-        request=request,
-    )
-    db.commit()
+    if not background:
+        audit(
+            db,
+            "check_system_update",
+            "system_update",
+            result.get("release", {}).get("tag_name") if isinstance(result.get("release"), dict) else "none",
+            actor=user,
+            after={"configured": result.get("configured"), "repository": result.get("repository"), "release": result.get("release", {}).get("tag_name") if isinstance(result.get("release"), dict) else None},
+            request=request,
+        )
+        db.commit()
     return result
 
 

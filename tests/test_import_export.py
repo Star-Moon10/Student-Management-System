@@ -162,6 +162,22 @@ def test_update_release_requires_newer_version_and_controlled_assets():
     assert updates.is_newer_release(f"v{updates.APP_RELEASE}") is False
 
 
+def test_background_update_check_does_not_create_audit_noise(db, admin, monkeypatch):
+    monkeypatch.setattr(main_module, "require_csrf", lambda request: None)
+    monkeypatch.setattr(
+        main_module,
+        "check_for_update",
+        lambda session: {"configured": True, "repository": "owner/repository", "release": {"tag_name": "v2099.01.01"}},
+    )
+
+    background_result = main_module.check_system_update(None, db, admin, background=True)
+    assert background_result["release"]["tag_name"] == "v2099.01.01"
+    assert db.scalar(select(AuditLog).where(AuditLog.action == "check_system_update")) is None
+
+    main_module.check_system_update(None, db, admin, background=False)
+    assert db.scalar(select(AuditLog).where(AuditLog.action == "check_system_update")) is not None
+
+
 def test_json_timestamp_normalization_adds_the_china_offset_once():
     payload = {"created_at": "2026-08-30T14:30:00", "nested": [{"at": "2026-08-30T14:30:00+08:00"}], "birth_date": "2001-01-01"}
     normalized = normalize_json_timestamps(payload)
