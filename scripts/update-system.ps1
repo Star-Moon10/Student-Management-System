@@ -82,8 +82,9 @@ function Stop-ManagedServer {
 function Start-ManagedServer {
   $env:SMS_NO_BROWSER = '1'
   try {
-    & cmd.exe /c (Join-Path $ProjectRoot 'start-system.bat') | Out-Null
-    if ($LASTEXITCODE -ne 0) { throw "启动脚本退出码为 $LASTEXITCODE" }
+    $launcher = Join-Path $ProjectRoot 'start-system.bat'
+    $command = 'call "{0}"' -f $launcher
+    Start-Process -FilePath $env:ComSpec -ArgumentList @('/d', '/c', $command) -WorkingDirectory $ProjectRoot -WindowStyle Hidden
   } finally {
     Remove-Item Env:SMS_NO_BROWSER -ErrorAction SilentlyContinue
   }
