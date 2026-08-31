@@ -89,7 +89,7 @@ AI 不可用时，学生档案、导入、审核、导出和审计功能仍可�
 
 更新器会下载 ZIP 与 SHA-256 校验文件、验证 `manifest.json` 与每个文件哈希、创建更新前数据库备份、替换代码白名单、安装依赖并执行健康检查。失败时会自动尝试回滚代码与数据库副本；如果更新期间断电、崩溃或更新进程被强制结束，下一次运行 `start-system.bat` 会检测未完成事务并在启动服务前自动恢复更新前版本。
 
-更新过程不会覆盖或上传 `.env`、账号、`data`、`storage`、`exports`、`backups`、`models`、`tools`、`resource`、`run` 或 `.venv`。管理员也可以在系统设置使用离线更新包。
+更新过程不会覆盖或上传 `.env`、账号、`data`、`storage`、`exports`、`backups`、`models`、`tools`、`resource`、`run` 或 `.venv`。`start-system.bat`、`stop-system.bat` 和 `setup.bat` 也作为稳定引导层保留在本机，不会被在线更新包替换。管理员也可以在系统设置使用离线更新包。
 
 ## 安全与运维
 

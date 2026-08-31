@@ -34,9 +34,6 @@ RUNTIME_FILES = {
     "docker-compose.yml",
     "pyproject.toml",
     "requirements.lock",
-    "setup.bat",
-    "start-system.bat",
-    "stop-system.bat",
 }
 FORBIDDEN_PATH_PARTS = {
     ".venv",

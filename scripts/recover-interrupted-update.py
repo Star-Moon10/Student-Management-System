@@ -21,9 +21,6 @@ RUNTIME_FILES = (
     "docker-compose.yml",
     "pyproject.toml",
     "requirements.lock",
-    "setup.bat",
-    "start-system.bat",
-    "stop-system.bat",
 )
 INCOMPLETE_STATES = {"prepared", "applying", "installing", "restarting", "rolling_back"}
 

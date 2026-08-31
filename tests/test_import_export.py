@@ -210,7 +210,7 @@ def test_startup_recovery_restores_an_interrupted_update(tmp_path):
         (root / directory / "marker.txt").write_text("new", encoding="utf-8")
         (rollback / directory).mkdir(parents=True, exist_ok=True)
         (rollback / directory / "marker.txt").write_text("old", encoding="utf-8")
-    (root / "start-system.bat").write_text("new-start", encoding="utf-8")
+    (root / "start-system.bat").write_text("stable-start", encoding="utf-8")
     (rollback / "start-system.bat").write_text("old-start", encoding="utf-8")
     (root / "data").mkdir(parents=True)
     (root / "data" / "student_management.db").write_text("new-database", encoding="utf-8")
@@ -235,10 +235,16 @@ def test_startup_recovery_restores_an_interrupted_update(tmp_path):
 
     assert result == {"recovered": True, "database_restored": True, "job_id": "job-1"}
     assert (root / "app" / "marker.txt").read_text(encoding="utf-8") == "old"
-    assert (root / "start-system.bat").read_text(encoding="utf-8") == "old-start"
+    assert (root / "start-system.bat").read_text(encoding="utf-8") == "stable-start"
     assert (root / "data" / "student_management.db").read_text(encoding="utf-8") == "old-database"
     assert not transaction_path.exists()
     assert json.loads((root / "run" / "update-status.json").read_text(encoding="utf-8"))["state"] == "rolled_back"
+
+
+def test_online_update_payload_keeps_the_stable_launchers_outside_the_replace_list():
+    assert "start-system.bat" not in update_recovery.RUNTIME_FILES
+    assert "stop-system.bat" not in update_recovery.RUNTIME_FILES
+    assert "setup.bat" not in update_recovery.RUNTIME_FILES
 
 
 def test_json_timestamp_normalization_adds_the_china_offset_once():
