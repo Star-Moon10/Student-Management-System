@@ -66,7 +66,7 @@ def recover_interrupted_update(project_root: Path) -> dict[str, Any]:
     if not transaction_path.is_file():
         return {"recovered": False, "reason": "no_transaction"}
     try:
-        transaction = json.loads(transaction_path.read_text(encoding="utf-8"))
+        transaction = json.loads(transaction_path.read_text(encoding="utf-8-sig"))
     except (OSError, json.JSONDecodeError) as exc:
         raise RecoveryError("The interrupted-update transaction marker is unreadable") from exc
     if not isinstance(transaction, dict) or int(transaction.get("format", 0)) != 1:

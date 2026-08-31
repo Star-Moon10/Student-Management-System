@@ -217,8 +217,9 @@ def test_startup_recovery_restores_an_interrupted_update(tmp_path):
     database_rollback = rollback / "student_management.db"
     database_rollback.write_text("old-database", encoding="utf-8")
     transaction_path = root / "run" / "update-transaction.json"
-    transaction_path.write_text(
-        json.dumps(
+    transaction_path.write_bytes(
+        b"\xef\xbb\xbf"
+        + json.dumps(
             {
                 "format": 1,
                 "state": "installing",
@@ -227,8 +228,7 @@ def test_startup_recovery_restores_an_interrupted_update(tmp_path):
                 "database_path": str(root / "data" / "student_management.db"),
                 "database_rollback_path": str(database_rollback),
             }
-        ),
-        encoding="utf-8",
+        ).encode("utf-8")
     )
 
     result = update_recovery.recover_interrupted_update(root)
