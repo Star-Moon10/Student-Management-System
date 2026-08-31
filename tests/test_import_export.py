@@ -147,7 +147,7 @@ def test_update_release_requires_newer_version_and_controlled_assets():
     release = updates.serialize_release(
         {
             "id": 1,
-            "tag_name": "v2026.08.1",
+            "tag_name": "v2099.01.01",
             "name": "测试更新",
             "assets": [
                 {"name": updates.UPDATE_PACKAGE_ASSET, "size": 123, "url": "https://api.example/package", "browser_download_url": "https://downloads.example/package"},
@@ -158,8 +158,8 @@ def test_update_release_requires_newer_version_and_controlled_assets():
 
     assert release["is_newer"] is True
     assert release["update_ready"] is True
-    assert updates.is_newer_release("v2026.08.1") is True
-    assert updates.is_newer_release("v2026.08.0") is False
+    assert updates.is_newer_release("v2099.01.01") is True
+    assert updates.is_newer_release(f"v{updates.APP_RELEASE}") is False
 
 
 def test_json_timestamp_normalization_adds_the_china_offset_once():

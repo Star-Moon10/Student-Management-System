@@ -7,6 +7,7 @@ import json
 import os
 import re
 import shutil
+import ssl
 import subprocess
 from datetime import datetime
 from pathlib import Path
@@ -14,6 +15,10 @@ from typing import Any
 from uuid import uuid4
 
 import httpx
+try:
+    import truststore
+except ImportError:  # Allows source checks before the project dependencies are installed.
+    truststore = None
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
@@ -162,6 +167,13 @@ def _github_headers(token: str | None, accept: str = "application/vnd.github+jso
     return headers
 
 
+def _github_tls_context() -> ssl.SSLContext:
+    """Use the Windows/macOS system trust store for GitHub Release TLS checks."""
+    if truststore is not None:
+        return truststore.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+    return ssl.create_default_context()
+
+
 def _release_asset(release: dict[str, Any], name: str) -> dict[str, Any] | None:
     return next((asset for asset in (release.get("assets") or []) if isinstance(asset, dict) and asset.get("name") == name), None)
 
@@ -189,7 +201,7 @@ def check_for_update(db: Session) -> dict[str, Any]:
         return {"configured": False, "current_version": APP_RELEASE, "message": "尚未配置 GitHub 更新仓库", "release": None}
     url = f"https://api.github.com/repos/{config['repository']}/releases?per_page=20"
     try:
-        with httpx.Client(timeout=15, follow_redirects=True) as client:
+        with httpx.Client(timeout=15, follow_redirects=True, verify=_github_tls_context()) as client:
             response = client.get(url, headers=_github_headers(config.get("github_token")))
             response.raise_for_status()
             releases = response.json()
