@@ -137,7 +137,8 @@ try {
       $checksumUrl = [string]$job.release.checksum.url
     }
     Invoke-WebRequest -Uri $packageUrl -Headers $headers -OutFile $PackagePath -UseBasicParsing
-    $checksumContent = (Invoke-WebRequest -Uri $checksumUrl -Headers $headers -UseBasicParsing).Content
+    $checksumResponse = Invoke-WebRequest -Uri $checksumUrl -Headers $headers -UseBasicParsing
+    $checksumContent = if ($checksumResponse.Content -is [byte[]]) { [System.Text.Encoding]::UTF8.GetString($checksumResponse.Content) } else { [string]$checksumResponse.Content }
     $expectedHash = ([regex]::Match($checksumContent, '(?i)[a-f0-9]{64}')).Value.ToLowerInvariant()
   }
   if (-not $expectedHash -or (Get-FileHashValue $PackagePath) -ne $expectedHash.ToLowerInvariant()) {

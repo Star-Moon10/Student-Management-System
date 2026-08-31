@@ -178,6 +178,21 @@ def test_background_update_check_does_not_create_audit_noise(db, admin, monkeypa
     assert db.scalar(select(AuditLog).where(AuditLog.action == "check_system_update")) is not None
 
 
+def test_update_notice_exposes_only_safe_progress_to_authenticated_users(monkeypatch, admin):
+    monkeypatch.setattr(
+        main_module,
+        "get_update_status",
+        lambda: {"state": "installing", "message": "正在安装依赖", "progress": 70, "updated_at": "2026-09-01T01:00:00+08:00", "error": "internal-only"},
+    )
+
+    assert main_module.system_update_notice(admin) == {
+        "state": "installing",
+        "message": "正在安装依赖",
+        "progress": 70,
+        "updated_at": "2026-09-01T01:00:00+08:00",
+    }
+
+
 def test_json_timestamp_normalization_adds_the_china_offset_once():
     payload = {"created_at": "2026-08-30T14:30:00", "nested": [{"at": "2026-08-30T14:30:00+08:00"}], "birth_date": "2001-01-01"}
     normalized = normalize_json_timestamps(payload)

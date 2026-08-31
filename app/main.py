@@ -3993,6 +3993,17 @@ def system_update_status(
     }
 
 
+@app.get("/api/system/update-notice")
+def system_update_notice(user: User = Depends(get_current_user)) -> dict[str, Any]:
+    update_status = get_update_status()
+    return {
+        "state": update_status.get("state", "idle"),
+        "message": update_status.get("message", ""),
+        "progress": update_status.get("progress", 0),
+        "updated_at": update_status.get("updated_at"),
+    }
+
+
 @app.post("/api/system/updates/check")
 def check_system_update(
     request: Request,

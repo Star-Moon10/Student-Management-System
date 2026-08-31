@@ -1,4 +1,4 @@
-const state = { user: null, students: [], selectedStudentIds: new Set(), selectedRelatedCandidateIds: new Set(), studentPage: 1, studentPageSize: 50, studentTotalPages: 1, currentStudent: null, administrators: [], currentAdministrator: null, savedStudentFilters: [], activeView: 'dashboard', aiConversationId: null, aiSuggestionRequest: 0, highRiskApproval: null, excelPreview: null, importTemplates: [], exportTemplates: [], pendingExport: null, importReportCache: {}, importReportHideTimer: null, importReportTrigger: null, passwordPrompted: false, idleLogoutTimer: null, idleLogoutStarted: false, lastActivityAt: 0, dataScopePreviewTimer: null, dataScopePreviewRequest: 0, latestSystemUpdate: null, systemUpdateTimer: null, systemUpdateAutoChecked: false };
+const state = { user: null, students: [], selectedStudentIds: new Set(), selectedRelatedCandidateIds: new Set(), studentPage: 1, studentPageSize: 50, studentTotalPages: 1, currentStudent: null, administrators: [], currentAdministrator: null, savedStudentFilters: [], activeView: 'dashboard', aiConversationId: null, aiSuggestionRequest: 0, highRiskApproval: null, excelPreview: null, importTemplates: [], exportTemplates: [], pendingExport: null, importReportCache: {}, importReportHideTimer: null, importReportTrigger: null, passwordPrompted: false, idleLogoutTimer: null, idleLogoutStarted: false, lastActivityAt: 0, dataScopePreviewTimer: null, dataScopePreviewRequest: 0, latestSystemUpdate: null, systemUpdateTimer: null, systemUpdateAutoChecked: false, systemUpdatePageLoadedAt: Date.now(), systemUpdateRefreshDeadline: null, systemUpdateRefreshTimer: null, lastSystemUpdateNotice: null };
 const IDLE_LOGOUT_TIMEOUT_MS = 5 * 60 * 1000;
 const titles = {
   dashboard: ['工作台', '概览'],
@@ -603,6 +603,70 @@ function systemUpdateStateLabel(stateValue) {
   return labels[stateValue] || stateValue || '未执行更新';
 }
 
+const VISIBLE_SYSTEM_UPDATE_STATES = new Set(['queued', 'downloading', 'validating', 'backing_up', 'applying', 'installing', 'restarting', 'rolling_back', 'completed', 'rolled_back', 'failed']);
+
+function ensureSystemUpdateFeedback() {
+  let liveNotice = document.querySelector('#system-update-live-notice');
+  if (!liveNotice) {
+    document.body.insertAdjacentHTML('beforeend', '<section class="system-update-live-notice" id="system-update-live-notice" aria-live="polite" hidden><div class="system-update-live-heading"><i data-lucide="refresh-cw"></i><div><strong id="system-update-live-title">系统更新</strong><span id="system-update-live-message"></span></div><b id="system-update-live-percent">0%</b></div><div class="system-update-progress-track"><span id="system-update-live-bar"></span></div></section>');
+    liveNotice = document.querySelector('#system-update-live-notice');
+  }
+  let detailProgress = document.querySelector('#system-update-progress');
+  if (!detailProgress) {
+    document.querySelector('#system-update-summary')?.insertAdjacentHTML('afterend', '<section class="system-update-progress" id="system-update-progress" hidden><div class="system-update-progress-heading"><strong id="system-update-progress-title">更新进度</strong><span id="system-update-progress-percent">0%</span></div><div class="system-update-progress-track"><span id="system-update-progress-bar"></span></div><p id="system-update-progress-message"></p></section>');
+    detailProgress = document.querySelector('#system-update-progress');
+  }
+  return {liveNotice, detailProgress};
+}
+
+function renderSystemUpdateFeedback(updateStatus = {}) {
+  const {liveNotice, detailProgress} = ensureSystemUpdateFeedback();
+  const updateState = String(updateStatus.state || 'idle');
+  const visible = VISIBLE_SYSTEM_UPDATE_STATES.has(updateState);
+  const progress = Math.max(0, Math.min(100, Number(updateStatus.progress || 0)));
+  const title = systemUpdateStateLabel(updateState);
+  const message = String(updateStatus.message || '等待管理员操作');
+  [liveNotice, detailProgress].forEach((node) => { if (node) node.hidden = !visible; });
+  if (!visible) return;
+  liveNotice.className = `system-update-live-notice state-${updateState}`;
+  document.querySelector('#system-update-live-title').textContent = title;
+  document.querySelector('#system-update-live-message').textContent = message;
+  document.querySelector('#system-update-live-percent').textContent = `${progress}%`;
+  document.querySelector('#system-update-live-bar').style.width = `${progress}%`;
+  document.querySelector('#system-update-progress-title').textContent = title;
+  document.querySelector('#system-update-progress-percent').textContent = `${progress}%`;
+  document.querySelector('#system-update-progress-bar').style.width = `${progress}%`;
+  document.querySelector('#system-update-progress-message').textContent = message;
+  refreshIcons();
+}
+
+function beginSystemUpdateRefresh(updateStatus) {
+  const completedAt = Date.parse(String(updateStatus.updated_at || ''));
+  if (updateStatus.state !== 'completed' || !Number.isFinite(completedAt) || completedAt <= state.systemUpdatePageLoadedAt || state.systemUpdateRefreshDeadline) return;
+  state.systemUpdateRefreshDeadline = Date.now() + 5000;
+  const tick = () => {
+    const remaining = Math.max(0, Math.ceil((state.systemUpdateRefreshDeadline - Date.now()) / 1000));
+    renderSystemUpdateFeedback({...updateStatus, message: `更新完成，${remaining} 秒后自动刷新页面。`, progress: 100});
+    if (remaining <= 0) {
+      clearInterval(state.systemUpdateRefreshTimer);
+      window.location.reload();
+    }
+  };
+  tick();
+  state.systemUpdateRefreshTimer = window.setInterval(tick, 250);
+}
+
+async function pollSystemUpdateNotice() {
+  try {
+    const updateStatus = await api('/api/system/update-notice');
+    state.lastSystemUpdateNotice = updateStatus;
+    renderSystemUpdateFeedback(updateStatus);
+    beginSystemUpdateRefresh(updateStatus);
+  } catch (_) {
+    // The updater intentionally stops the local server for a short period.
+  }
+}
+
 function renderSystemUpdate(data) {
   const summary = document.querySelector('#system-update-summary');
   const releaseNode = document.querySelector('#system-update-release');
@@ -611,6 +675,7 @@ function renderSystemUpdate(data) {
   if (!summary || !releaseNode || !executeForm || !configForm) return;
   const configuration = data.configuration || {};
   const updateStatus = data.status || {state: 'idle'};
+  renderSystemUpdateFeedback(updateStatus);
   const release = state.latestSystemUpdate?.release || null;
   const statusState = String(updateStatus.state || 'idle');
   const progress = Math.max(0, Math.min(100, Number(updateStatus.progress || 0)));
@@ -2611,6 +2676,8 @@ async function boot() {
     if (loginNotice) { window.sessionStorage.removeItem('login-security-notice'); toast(loginNotice); }
     await Promise.all([refreshAll(), loadAiStatus(), loadAiConversation(), loadSavedStudentFilters()]);
     void autoCheckSystemUpdate();
+    void pollSystemUpdateNotice();
+    window.setInterval(pollSystemUpdateNotice, 3000);
     window.setInterval(loadAiStatus, 30000);
     refreshIcons();
   } catch (errorObject) {
