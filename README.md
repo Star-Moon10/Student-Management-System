@@ -1,30 +1,66 @@
+<div align="center">
+
 # 学生档案管理系统
+
+<a href="README.en.md">English</a>
+
+<br><br>
 
 [![Release](https://img.shields.io/github/v/release/Star-Moon10/Student-Management-System?display_name=tag&label=Release)](https://github.com/Star-Moon10/Student-Management-System/releases)
 [![Validation](https://github.com/Star-Moon10/Student-Management-System/actions/workflows/validate.yml/badge.svg)](https://github.com/Star-Moon10/Student-Management-System/actions/workflows/validate.yml)
+[![Python](https://img.shields.io/badge/Python-3.12%2B-3776AB)](pyproject.toml)
 [![License](https://img.shields.io/badge/license-Restricted%20Use-b42318)](LICENSE)
 
-面向学校档案管理场景的本地部署系统。系统将学生主档案、Excel 导入、相关资料审核、来源追溯、审计回滚、数据库备份和只读 AI 数据助手放在同一套受控工作流中，适合教师、普通管理员和超级管理员协同使用。
+<br>
 
-**English documentation: [README.en.md](README.en.md)**
+<a href="#快速开始">快速开始</a> · <a href="#部署方式">部署方式</a> · <a href="#在线更新">在线更新</a> · <a href="docs/OPERATIONS.md">运维文档</a> · <a href="https://github.com/Star-Moon10/Student-Management-System/issues">问题反馈</a>
 
+</div>
+
+面向学校档案管理场景的本地部署系统。它将学生主档案、Excel 导入、相关资料审核、来源追溯、审计回滚、数据库备份和只读 AI 数据助手放在同一套受控工作流中，适合教师、普通管理员和超级管理员协同使用。
+
+> [!IMPORTANT]
 > **授权声明**：本仓库公开源码仅供评估、审阅、安全检查和经授权开发。未经版权人书面许可，任何个人或组织不得使用、部署、复制、修改、分发、提供服务或以其他方式利用本系统及其衍生成果。详见 [LICENSE](LICENSE)。
 
-## 目录
+## 主要能力
 
-- [核心能力](#核心能力)
-- [角色与数据边界](#角色与数据边界)
-- [部署方式](#部署方式)
-- [Windows 本地部署](#windows-本地部署)
-- [Docker 部署](#docker-部署)
-- [macOS 与本地 AI](#macos-与本地-ai)
-- [配置与数据持久化](#配置与数据持久化)
-- [在线更新](#在线更新)
-- [安全与运维](#安全与运维)
-- [开发与发布](#开发与发布)
-- [许可与免责声明](#许可与免责声明)
+1. **完整档案工作流**：学生档案、批量导入、资料审核、导出、来源追溯、版本历史和时间线。
+2. **按学校组织管理**：学校、学院、专业、班级四层数据范围统一约束列表、详情、导出、原始资料和 AI。
+3. **可审计、可恢复**：关键操作留痕，支持撤回、备份、恢复演练、回收站和中断更新恢复。
+4. **AI 只读协作**：本地 AI 支持自然语言检索、统计和受控导出，不具备数据库写入能力。
+5. **面向本地运维**：Windows 一键启动、Docker Compose、加密备份、权限控制和可见更新进度。
 
-## 核心能力
+## 快速开始
+
+### Windows 本地部署
+
+```bat
+setup.bat
+start-system.bat
+```
+
+首次运行 `setup.bat`，日常只运行 `start-system.bat`。浏览器会打开 `http://127.0.0.1:8100`。
+
+### Docker Compose
+
+```bash
+cp .env.example .env
+# 修改 JWT_SECRET 后继续
+docker compose up --build -d
+docker compose exec app python -m app.seed_admin --username admin
+```
+
+Docker 核心部署完成后访问 `http://localhost:8100`。macOS 用户请继续阅读 [macOS 与本地 AI](#macos-与本地-ai)。
+
+### 无 AI 部署
+
+```env
+AI_ENABLED=false
+```
+
+关闭 AI 不影响学生档案、导入、审核、导出、权限、审计和备份。
+
+## 功能清单
 
 | 模块 | 能力 |
 | --- | --- |

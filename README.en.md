@@ -1,30 +1,66 @@
+<div align="center">
+
 # Student Management System
+
+<a href="README.md">简体中文</a>
+
+<br><br>
 
 [![Release](https://img.shields.io/github/v/release/Star-Moon10/Student-Management-System?display_name=tag&label=Release)](https://github.com/Star-Moon10/Student-Management-System/releases)
 [![Validation](https://github.com/Star-Moon10/Student-Management-System/actions/workflows/validate.yml/badge.svg)](https://github.com/Star-Moon10/Student-Management-System/actions/workflows/validate.yml)
+[![Python](https://img.shields.io/badge/Python-3.12%2B-3776AB)](pyproject.toml)
 [![License](https://img.shields.io/badge/license-Restricted%20Use-b42318)](LICENSE)
+
+<br>
+
+<a href="#quick-start">Quick Start</a> · <a href="#deployment-options">Deployment</a> · <a href="#online-updates">Updates</a> · <a href="docs/OPERATIONS.md">Operations</a> · <a href="https://github.com/Star-Moon10/Student-Management-System/issues">Issue Tracker</a>
+
+</div>
 
 A locally deployable student records system for school administration. It brings student records, Excel imports, related-material review, data lineage, audit recovery, backups, and a read-only AI assistant into one controlled workflow for teachers, administrators, and super administrators.
 
-**Default documentation: [Chinese README](README.md)**
-
+> [!IMPORTANT]
 > **Authorization notice:** Source code is available only for evaluation, review, security assessment, and authorized development. No person or organization may use, deploy, copy, modify, distribute, provide as a service, or otherwise exploit this software without prior written authorization from the copyright holder. See [LICENSE](LICENSE).
 
-## Contents
+## Key Features
 
-- [Capabilities](#capabilities)
-- [Roles and Data Scope](#roles-and-data-scope)
-- [Deployment Options](#deployment-options)
-- [Windows Local Deployment](#windows-local-deployment)
-- [Docker Deployment](#docker-deployment)
-- [macOS and Local AI](#macos-and-local-ai)
-- [Configuration and Persistence](#configuration-and-persistence)
-- [Online Updates](#online-updates)
-- [Security and Operations](#security-and-operations)
-- [Development and Releases](#development-and-releases)
-- [License and Disclaimer](#license-and-disclaimer)
+1. **Complete record workflow**: Student records, batch imports, material review, exports, lineage, version history, and timelines.
+2. **School-aware access control**: School, college, major, and class scopes consistently constrain lists, details, exports, source files, and AI.
+3. **Auditable and recoverable**: Critical operations are recorded and support rollback, backups, restore drills, recycle-bin recovery, and interrupted-update recovery.
+4. **Read-only AI collaboration**: Local AI supports natural-language search, aggregation, and controlled exports without database write access.
+5. **Local operations first**: Windows launcher scripts, Docker Compose, encrypted backups, permission control, and visible update progress.
 
-## Capabilities
+## Quick Start
+
+### Windows Local Deployment
+
+```bat
+setup.bat
+start-system.bat
+```
+
+Run `setup.bat` only for the first setup. For everyday use, run `start-system.bat` and open `http://127.0.0.1:8100`.
+
+### Docker Compose
+
+```bash
+cp .env.example .env
+# Replace JWT_SECRET before continuing.
+docker compose up --build -d
+docker compose exec app python -m app.seed_admin --username admin
+```
+
+Open `http://localhost:8100`. macOS users should also read [macOS and Local AI](#macos-and-local-ai).
+
+### Deploy Without AI
+
+```env
+AI_ENABLED=false
+```
+
+Disabling AI does not affect records, imports, review, export, roles, audit, or backups.
+
+## Feature Matrix
 
 | Area | Included capabilities |
 | --- | --- |
