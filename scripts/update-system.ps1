@@ -102,7 +102,14 @@ function Wait-ForHealth {
 
 function Get-FileHashValue {
   param([string]$PathValue)
-  return (Get-FileHash -LiteralPath $PathValue -Algorithm SHA256).Hash.ToLowerInvariant()
+  $stream = [IO.File]::OpenRead($PathValue)
+  $algorithm = [Security.Cryptography.SHA256]::Create()
+  try {
+    return -join ($algorithm.ComputeHash($stream) | ForEach-Object { $_.ToString('x2') })
+  } finally {
+    $algorithm.Dispose()
+    $stream.Dispose()
+  }
 }
 
 $job = Get-Content -LiteralPath $JobPath -Raw | ConvertFrom-Json
