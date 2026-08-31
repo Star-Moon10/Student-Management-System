@@ -91,10 +91,20 @@ function Start-ManagedServer {
 
 function Wait-ForHealth {
   for ($index = 0; $index -lt 60; $index += 1) {
+    $response = $null
+    $reader = $null
     try {
-      $response = Invoke-RestMethod -Uri 'http://127.0.0.1:8100/health' -TimeoutSec 3
-      if ($response.status -eq 'ok') { return }
+      $request = [System.Net.WebRequest]::Create('http://127.0.0.1:8100/health')
+      $request.Timeout = 3000
+      $request.ReadWriteTimeout = 3000
+      $response = $request.GetResponse()
+      $reader = New-Object System.IO.StreamReader($response.GetResponseStream())
+      if ($reader.ReadToEnd() -match '"status"\s*:\s*"ok"') { return }
     } catch {}
+    finally {
+      if ($reader) { $reader.Dispose() }
+      if ($response) { $response.Dispose() }
+    }
     Start-Sleep -Seconds 1
   }
   throw '更新后的服务未能在 60 秒内通过健康检查'
