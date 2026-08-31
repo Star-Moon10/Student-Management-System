@@ -1,9 +1,12 @@
 name: Publish controlled update
 
 on:
-  push:
-    tags: ['v*']
   workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing version tag to package and publish, for example v1.0.1
+        required: true
+        type: string
 
 permissions:
   contents: write
@@ -13,12 +16,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag }}
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Verify tag matches VERSION
-        if: github.event_name == 'push'
-        run: test "${GITHUB_REF_NAME#v}" = "$(tr -d '\r\n' < VERSION)"
+      - name: Verify requested tag matches VERSION
+        env:
+          RELEASE_TAG: ${{ inputs.tag }}
+        run: |
+          git fetch --tags --force
+          git show-ref --verify --quiet "refs/tags/${RELEASE_TAG}"
+          test "${RELEASE_TAG#v}" = "$(tr -d '\r\n' < VERSION)"
       - name: Install dependencies
         run: python -m pip install --upgrade pip && python -m pip install -e '.[dev]'
       - name: Audit public source
@@ -30,6 +39,7 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ inputs.tag }}
           generate_release_notes: true
           body_path: dist/release-notes.md
           files: |
