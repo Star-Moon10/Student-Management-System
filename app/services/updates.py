@@ -93,8 +93,12 @@ def _release_version(value: str | None) -> tuple[int, ...]:
 
 
 def is_newer_release(tag_name: str | None) -> bool:
-    latest = _release_version(tag_name)
-    current = _release_version(APP_RELEASE)
+    latest_text = str(tag_name or "").strip().removeprefix("v").removeprefix("V")
+    current_text = str(APP_RELEASE or "").strip().removeprefix("v").removeprefix("V")
+    if re.fullmatch(r"20\d{2}\.\d+\.\d+", current_text) and re.fullmatch(r"\d+\.\d+\.\d+", latest_text):
+        return True
+    latest = _release_version(latest_text)
+    current = _release_version(current_text)
     size = max(len(latest), len(current))
     return latest + (0,) * (size - len(latest)) > current + (0,) * (size - len(current))
 

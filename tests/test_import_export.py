@@ -16,6 +16,7 @@ from sqlalchemy import create_engine, select, text
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.core.config import get_settings
+from app.version import validate_release_version
 from app.core import security
 from app.core.security import hash_password, verify_password
 from app.core.time import normalize_json_timestamps
@@ -183,6 +184,14 @@ def test_update_release_selection_uses_highest_numeric_version_not_api_order():
 
     assert selected is not None
     assert selected["tag_name"] == "v2026.08.12"
+
+
+def test_release_version_uses_a_single_decimal_patch_digit(monkeypatch):
+    assert validate_release_version("v1.0.9") == "1.0.9"
+    with pytest.raises(ValueError):
+        validate_release_version("1.0.10")
+    monkeypatch.setattr(updates, "APP_RELEASE", "2026.08.13")
+    assert updates.is_newer_release("v1.0.1") is True
 
 
 def test_background_update_check_does_not_create_audit_noise(db, admin, monkeypatch):

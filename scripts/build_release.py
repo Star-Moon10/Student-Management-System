@@ -11,6 +11,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from audit_public_source import RUNTIME_DIRECTORIES, RUNTIME_FILES, allowed_files, audit_files
+from app.version import validate_release_version
 
 
 def sha256(path: Path) -> str:
@@ -39,9 +40,11 @@ def main() -> int:
     args = parser.parse_args()
     root = args.root.resolve()
     output = args.output.resolve()
-    version = args.version.strip().removeprefix("v") or (root / "VERSION").read_text(encoding="utf-8").strip()
-    if not version:
-        raise SystemExit("VERSION must not be empty")
+    raw_version = args.version.strip().removeprefix("v") or (root / "VERSION").read_text(encoding="utf-8").strip()
+    try:
+        version = validate_release_version(raw_version)
+    except ValueError as exc:
+        raise SystemExit(str(exc)) from exc
     issues = audit_files(root, allowed_files(root, runtime=True))
     if issues:
         raise SystemExit("Unsafe release source:\n" + "\n".join(issues))

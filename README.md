@@ -121,7 +121,7 @@ python -m pytest -q
 python scripts\build_release.py --output dist
 ```
 
-更新 `VERSION` 后，创建同名 Git 标签，例如 `v2026.09.0`。GitHub Actions 会执行源码审计、测试和更新包构建，再将 ZIP 与 SHA-256 发布到 Release。详细流程见 [docs/RELEASING.md](docs/RELEASING.md)。
+更新 `VERSION` 后，创建同名 Git 标签，例如 `v1.0.1`。版本使用 `X.Y.Z`：最后一位 `Z` 只能是 `0-9`，因此 `v1.0.9` 的下一版必须是 `v1.1.0`。GitHub Actions 会执行源码审计、测试和更新包构建，再将 ZIP 与 SHA-256 发布到 Release。详细流程见 [docs/RELEASING.md](docs/RELEASING.md)。
 
 ## 项目文档
 
