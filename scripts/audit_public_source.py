@@ -21,8 +21,11 @@ PUBLIC_FILES = {
     "docker-compose.yml",
     "pyproject.toml",
     "requirements.lock",
+    "setup.sh",
     "setup.bat",
+    "start-system.sh",
     "start-system.bat",
+    "stop-system.sh",
     "stop-system.bat",
 }
 RUNTIME_DIRECTORIES = ("app", "scripts", "docs")

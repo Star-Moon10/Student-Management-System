@@ -23,5 +23,7 @@ jobs:
         run: python scripts/audit_public_source.py
       - name: Run tests
         run: python -m pytest -q
+      - name: Validate POSIX shell scripts
+        run: bash -n setup.sh start-system.sh stop-system.sh scripts/update-system.sh scripts/setup-project-ai.sh scripts/start-project-ai.sh scripts/stop-project-ai.sh
       - name: Validate release builder
         run: python scripts/build_release.py --output dist

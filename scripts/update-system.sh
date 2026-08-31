@@ -58,7 +58,7 @@ fi
 PROJECT_PYTHON="$PROJECT_ROOT/.venv/bin/python"
 
 ALLOWED_DIRECTORIES="app scripts docs"
-ALLOWED_FILES=".env.example Dockerfile LICENSE README.md VERSION docker-compose.yml pyproject.toml requirements.lock"
+ALLOWED_FILES=".env.example Dockerfile LICENSE README.md README.en.md VERSION docker-compose.yml pyproject.toml requirements.lock"
 
 # ---------- 从 job.json 读取指定字段 ----------
 job_value() {
@@ -136,7 +136,30 @@ remove_transaction() {
 
 # ---------- 计算文件 SHA-256 ----------
 sha256_file() {
-  shasum -a 256 "$1" | awk '{print $1}'
+  "$PROJECT_PYTHON" -c '
+import hashlib, sys
+digest = hashlib.sha256()
+with open(sys.argv[1], "rb") as source:
+    for chunk in iter(lambda: source.read(1024 * 1024), b""):
+        digest.update(chunk)
+print(digest.hexdigest())
+' "$1"
+}
+
+# ---------- 安全解压更新包（不依赖 unzip，并拒绝 zip-slip 路径） ----------
+extract_package() {
+  "$PROJECT_PYTHON" -c '
+import sys
+import zipfile
+from pathlib import PurePosixPath
+package, destination = sys.argv[1], sys.argv[2]
+with zipfile.ZipFile(package) as archive:
+    for item in archive.infolist():
+        path = PurePosixPath(item.filename)
+        if path.is_absolute() or ".." in path.parts:
+            raise SystemExit(f"unsafe archive member: {item.filename}")
+    archive.extractall(destination)
+' "$PACKAGE_PATH" "$STAGE_DIRECTORY"
 }
 
 # ---------- 校验路径位于项目根目录内（防止更新包路径逃逸） ----------
@@ -255,7 +278,7 @@ validate_package() {
   write_status "validating" "正在验证更新包清单" 25
   rm -rf "$STAGE_DIRECTORY"
   mkdir -p "$STAGE_DIRECTORY"
-  unzip -q -o "$PACKAGE_PATH" -d "$STAGE_DIRECTORY" || return 1
+  extract_package || return 1
   local manifest_path="$STAGE_DIRECTORY/manifest.json" format rel_hash rel hash candidate
   if [ ! -f "$manifest_path" ]; then
     echo "更新包缺少 manifest.json" >&2

@@ -41,6 +41,16 @@ start-system.bat
 
 Run `setup.bat` only for the first setup. For everyday use, run `start-system.bat` and open `http://127.0.0.1:8100`.
 
+### macOS/Linux Local Deployment
+
+```bash
+chmod +x setup.sh start-system.sh stop-system.sh
+./setup.sh
+./start-system.sh
+```
+
+Run `setup.sh` only for the first setup. Use `./start-system.sh` for everyday operation and `./stop-system.sh` to stop the service. Install Ollama and prepare a model only when local AI is required; the system remains usable in AI-degraded mode without one.
+
 ### Docker Compose
 
 ```bash
@@ -87,6 +97,7 @@ School, college, major, and class rules are applied consistently to lists, detai
 | Option | Best for | AI support |
 | --- | --- | --- |
 | Windows local | Office PCs and Windows intranet hosts | Project-local Ollama or existing local model |
+| macOS/Linux local | Mac or Linux hosts with Python 3.12 | System Ollama or manually imported model |
 | Docker Compose | Mac, Windows, or Linux hosts with Docker operations | Host or separate Ollama service |
 | Docker without AI | Records, imports, review, export, and auditing only | AI disabled or degraded |
 

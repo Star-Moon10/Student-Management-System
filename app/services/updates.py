@@ -282,7 +282,10 @@ def launch_update_runner(job_path: Path, github_token: str | None = None) -> Non
         creation_flags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
     else:
         runner_name = "update-system.sh"
-        command = ["bash"]
+        bash = shutil.which("bash")
+        if not bash:
+            raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED, detail="当前系统缺少 bash，无法执行在线更新")
+        command = [bash]
         creation_flags = 0
     runner_source = project_root() / "scripts" / runner_name
     if not runner_source.is_file():

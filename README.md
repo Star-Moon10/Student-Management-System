@@ -41,6 +41,16 @@ start-system.bat
 
 首次运行 `setup.bat`，日常只运行 `start-system.bat`。浏览器会打开 `http://127.0.0.1:8100`。
 
+### macOS/Linux 本地部署
+
+```bash
+chmod +x setup.sh start-system.sh stop-system.sh
+./setup.sh
+./start-system.sh
+```
+
+首次运行 `setup.sh`，日常运行 `./start-system.sh`，停止服务使用 `./stop-system.sh`。如需本地 AI，请先安装 Ollama 并准备模型；未准备模型时系统仍可在 AI 降级模式下运行。
+
 ### Docker Compose
 
 ```bash
@@ -87,6 +97,7 @@ AI_ENABLED=false
 | 方式 | 适用场景 | AI 支持 |
 | --- | --- | --- |
 | Windows 本地部署 | 办公室电脑、Windows 校园内网服务器 | 项目内 Ollama 或已有模型 |
+| macOS/Linux 本地部署 | 有 Python 3.12 的 Mac 或 Linux 主机 | 系统 Ollama 或手动导入模型 |
 | Docker Compose | 有 Docker 运维能力的 Mac、Windows 或 Linux 主机 | 宿主机或独立 Ollama |
 | Docker 无 AI | 只需要档案、导入、审核、导出和审计 | AI 功能关闭或降级 |
 

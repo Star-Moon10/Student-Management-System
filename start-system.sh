@@ -8,9 +8,24 @@ cd "$SCRIPT_DIR"
 
 PROJECT_PYTHON="$SCRIPT_DIR/.venv/bin/python"
 
-# 判断端口 8100 是否已被监听
+# 判断端口 8100 是否已被监听，不依赖 lsof。
 is_server_listening() {
-  lsof -nP -iTCP:8100 -sTCP:LISTEN >/dev/null 2>&1
+  "$PROJECT_PYTHON" -c '
+import socket
+socket.setdefaulttimeout(0.5)
+client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+try:
+    raise SystemExit(0 if client.connect_ex(("127.0.0.1", 8100)) == 0 else 1)
+finally:
+    client.close()
+' >/dev/null 2>&1
+}
+
+open_browser() {
+  case "$(uname -s)" in
+    Darwin) open "http://127.0.0.1:8100" ;;
+    Linux) command -v xdg-open >/dev/null 2>&1 && xdg-open "http://127.0.0.1:8100" >/dev/null 2>&1 || true ;;
+  esac
 }
 
 # 判断给定 PID 是否为本项目的 uvicorn 服务进程
@@ -24,7 +39,7 @@ if [ -f run/server.pid ]; then
   PID="$(cat run/server.pid 2>/dev/null || true)"
   if [ -n "$PID" ] && is_server_process "$PID"; then
     echo "学生管理系统已在运行。"
-    [ "${SMS_NO_BROWSER:-0}" = "1" ] || open "http://127.0.0.1:8100"
+    [ "${SMS_NO_BROWSER:-0}" = "1" ] || open_browser
     exit 0
   fi
   rm -f run/server.pid
@@ -89,6 +104,6 @@ fi
 
 # 9. 打开浏览器（更新重启场景下由更新器控制跳过）
 if [ "${SMS_NO_BROWSER:-0}" != "1" ]; then
-  open "http://127.0.0.1:8100"
+  open_browser
 fi
 echo "服务已启动：http://127.0.0.1:8100"

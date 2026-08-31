@@ -2,6 +2,7 @@ import asyncio
 import hashlib
 import importlib.util
 import json
+import os
 from datetime import datetime, timedelta, timezone
 from io import BytesIO
 from pathlib import Path
@@ -192,6 +193,28 @@ def test_release_version_uses_a_single_decimal_patch_digit(monkeypatch):
         validate_release_version("1.0.10")
     monkeypatch.setattr(updates, "APP_RELEASE", "2026.08.13")
     assert updates.is_newer_release("v1.0.1") is True
+
+
+@pytest.mark.skipif(os.name == "nt", reason="POSIX runner invocation is exercised by the Linux CI job")
+def test_posix_update_runner_uses_bash_and_copies_the_posix_script(tmp_path, monkeypatch):
+    root = tmp_path / "project"
+    runner_source = root / "scripts" / "update-system.sh"
+    runner_source.parent.mkdir(parents=True)
+    runner_source.write_text("#!/usr/bin/env bash\nexit 0\n", encoding="utf-8")
+    job_path = root / "run" / "updates" / "job" / "job.json"
+    job_path.parent.mkdir(parents=True)
+    job_path.write_text("{}", encoding="utf-8")
+    calls = []
+
+    monkeypatch.setattr(updates, "project_root", lambda: root)
+    monkeypatch.setattr(updates.shutil, "which", lambda command: "/bin/bash" if command == "bash" else None)
+    monkeypatch.setattr(updates.subprocess, "Popen", lambda command, **kwargs: calls.append((command, kwargs)))
+
+    updates.launch_update_runner(job_path)
+
+    runner = job_path.parent / "update-system.sh"
+    assert runner.read_text(encoding="utf-8") == runner_source.read_text(encoding="utf-8")
+    assert calls[0][0] == ["/bin/bash", str(runner), "-JobPath", str(job_path)]
 
 
 def test_background_update_check_does_not_create_audit_noise(db, admin, monkeypatch):

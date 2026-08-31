@@ -69,7 +69,7 @@ COOKIE_SECURE=false
 STORAGE_PATH=storage
 EXPORT_PATH=exports
 OLLAMA_BASE_URL=http://127.0.0.1:11434
-OLLAMA_MODEL=student-qwen-cuda:latest
+OLLAMA_MODEL=student-qwen:latest
 AI_ENABLED=true
 EOF
 else
