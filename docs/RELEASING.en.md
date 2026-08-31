@@ -1,6 +1,6 @@
 # Releases and Online Updates
 
-**[中文](RELEASING.md)**
+**[中文](RELEASING.zh-CN.md)**
 
 The GitHub repository may contain source code only. It must not contain local configuration, accounts, student data, original documents, backups, or local AI models.
 

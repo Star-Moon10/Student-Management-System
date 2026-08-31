@@ -13,7 +13,7 @@
 
 <br>
 
-<a href="#快速开始">快速开始</a> · <a href="#部署方式">部署方式</a> · <a href="#在线更新">在线更新</a> · <a href="docs/README.md">文档中心</a> · <a href="https://github.com/Star-Moon10/Student-Management-System/issues">问题反馈</a>
+<a href="#快速开始">快速开始</a> · <a href="#部署方式">部署方式</a> · <a href="#在线更新">在线更新</a> · <a href="docs/README.zh-CN.md">文档中心</a> · <a href="https://github.com/Star-Moon10/Student-Management-System/issues">问题反馈</a>
 
 </div>
 
@@ -174,10 +174,10 @@ AI_ENABLED=false
 ## 项目文档
 
 - [英文 README](README.en.md)
-- [文档中心](docs/README.md)
+- [文档中心](docs/README.zh-CN.md)
 - [运维与迁移指南](docs/OPERATIONS.zh-CN.md)
 - [生产部署说明](docs/PRODUCTION.zh-CN.md)
-- [发布与在线更新](docs/RELEASING.md)
+- [发布与在线更新](docs/RELEASING.zh-CN.md)
 - [更新记录](https://github.com/Star-Moon10/Student-Management-System/releases)
 
 部署、配置和维护的详细操作请以以上文档为准。

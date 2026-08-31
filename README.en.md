@@ -147,7 +147,7 @@ Records, Excel import, review, export, roles, auditing, and backups continue to 
 
 ## Deployment Notes
 
-Copy `.env.example` to `.env` and replace `JWT_SECRET` at minimum. Production deployments need HTTPS, independent backups, and controlled access. Treat the database, source documents, and backup directories as important migration assets. See the [operations guide](docs/OPERATIONS.md) for detailed configuration.
+Copy `.env.example` to `.env` and replace `JWT_SECRET` at minimum. Production deployments need HTTPS, independent backups, and controlled access. Treat the database, source documents, and backup directories as important migration assets. See the [operations guide](docs/OPERATIONS.en.md) for detailed configuration.
 
 ## Online Updates
 
@@ -166,8 +166,8 @@ Only Windows local deployments use the in-app updater. After an administrator co
 
 - [Chinese README](README.md)
 - [Documentation center](docs/README.en.md)
-- [Operations and migration](docs/OPERATIONS.md)
-- [Production deployment](docs/PRODUCTION.md)
+- [Operations and migration](docs/OPERATIONS.en.md)
+- [Production deployment](docs/PRODUCTION.en.md)
 - [Release and online updates](docs/RELEASING.en.md)
 - [Release history](https://github.com/Star-Moon10/Student-Management-System/releases)
 

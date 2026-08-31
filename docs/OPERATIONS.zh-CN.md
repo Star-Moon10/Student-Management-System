@@ -1,6 +1,6 @@
 # 系统运维与迁移
 
-**[English](OPERATIONS.md)**
+**[English](OPERATIONS.en.md)**
 
 ## 新电脑迁移检查清单
 

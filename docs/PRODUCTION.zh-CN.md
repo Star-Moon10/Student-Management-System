@@ -1,6 +1,6 @@
 # 生产环境部署
 
-**[English](PRODUCTION.md)**
+**[English](PRODUCTION.en.md)**
 
 服务可以从内置 SQLite 迁移到 MySQL，无需修改应用代码。迁移既有系统时，请将项目目录、`data`、`storage`、`backups`、`exports`、`.env` 和模型文件一起迁移。
 
