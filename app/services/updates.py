@@ -195,6 +195,17 @@ def serialize_release(release: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _select_release(releases: list[Any], channel: str) -> dict[str, Any] | None:
+    candidates = [
+        item
+        for item in releases
+        if isinstance(item, dict)
+        and not item.get("draft")
+        and (channel == "beta" or not item.get("prerelease"))
+    ]
+    return max(candidates, key=lambda item: _release_version(str(item.get("tag_name") or "")), default=None)
+
+
 def check_for_update(db: Session) -> dict[str, Any]:
     config = get_update_configuration(db, include_token=True)
     if not config["configured"]:
@@ -209,16 +220,7 @@ def check_for_update(db: Session) -> dict[str, Any]:
         return {"configured": True, "current_version": APP_RELEASE, "message": f"无法连接 GitHub Release：{exc}", "release": None}
     if not isinstance(releases, list):
         return {"configured": True, "current_version": APP_RELEASE, "message": "GitHub Release 返回格式不正确", "release": None}
-    release = next(
-        (
-            item
-            for item in releases
-            if isinstance(item, dict)
-            and not item.get("draft")
-            and (config["channel"] == "beta" or not item.get("prerelease"))
-        ),
-        None,
-    )
+    release = _select_release(releases, config["channel"])
     return {
         "configured": True,
         "repository": config["repository"],

@@ -171,6 +171,20 @@ def test_update_release_requires_newer_version_and_controlled_assets():
     assert updates.is_newer_release(f"v{updates.APP_RELEASE}") is False
 
 
+def test_update_release_selection_uses_highest_numeric_version_not_api_order():
+    selected = updates._select_release(
+        [
+            {"tag_name": "v2026.08.9", "draft": False, "prerelease": False},
+            {"tag_name": "v2026.08.12", "draft": False, "prerelease": False},
+            {"tag_name": "v2026.08.11", "draft": False, "prerelease": False},
+        ],
+        "stable",
+    )
+
+    assert selected is not None
+    assert selected["tag_name"] == "v2026.08.12"
+
+
 def test_background_update_check_does_not_create_audit_noise(db, admin, monkeypatch):
     monkeypatch.setattr(main_module, "require_csrf", lambda request: None)
     monkeypatch.setattr(
