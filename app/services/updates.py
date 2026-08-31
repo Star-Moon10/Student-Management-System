@@ -1,4 +1,4 @@
-"""Controlled GitHub Release updates for the Windows local deployment."""
+"""Controlled GitHub Release updates for local deployments (Windows, macOS, and Linux)."""
 
 from __future__ import annotations
 
@@ -275,19 +275,25 @@ def _sha256_file(path: Path) -> str:
 
 
 def launch_update_runner(job_path: Path, github_token: str | None = None) -> None:
-    if os.name != "nt":
-        raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED, detail="当前在线更新器仅支持 Windows 本地部署")
-    runner_source = project_root() / "scripts" / "update-system.ps1"
+    """启动独立更新执行器：Windows 使用 PowerShell，macOS/Linux 使用 bash 脚本。"""
+    if os.name == "nt":
+        runner_name = "update-system.ps1"
+        command = ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File"]
+        creation_flags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
+    else:
+        runner_name = "update-system.sh"
+        command = ["bash"]
+        creation_flags = 0
+    runner_source = project_root() / "scripts" / runner_name
     if not runner_source.is_file():
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="更新器脚本不存在")
-    runner = job_path.parent / "update-system.ps1"
+    runner = job_path.parent / runner_name
     shutil.copy2(runner_source, runner)
     environment = os.environ.copy()
     if github_token:
         environment["SMS_UPDATE_GITHUB_TOKEN"] = github_token
-    creation_flags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
     subprocess.Popen(
-        ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(runner), "-JobPath", str(job_path)],
+        [*command, str(runner), "-JobPath", str(job_path)],
         cwd=str(project_root()),
         env=environment,
         creationflags=creation_flags,
