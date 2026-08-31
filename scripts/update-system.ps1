@@ -93,12 +93,14 @@ function Stop-ManagedServer {
 
 function Start-ManagedServer {
   $env:SMS_NO_BROWSER = '1'
+  $env:SMS_UPDATE_RESTART = '1'
   try {
     $launcher = Join-Path $ProjectRoot 'start-system.bat'
     $command = 'call "{0}"' -f $launcher
     Start-Process -FilePath $env:ComSpec -ArgumentList @('/d', '/c', $command) -WorkingDirectory $ProjectRoot -WindowStyle Hidden
   } finally {
     Remove-Item Env:SMS_NO_BROWSER -ErrorAction SilentlyContinue
+    Remove-Item Env:SMS_UPDATE_RESTART -ErrorAction SilentlyContinue
   }
 }
 

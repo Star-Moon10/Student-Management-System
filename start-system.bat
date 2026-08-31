@@ -37,17 +37,19 @@ if errorlevel 1 (
   exit /b 1
 )
 
-if not exist "run" mkdir "run"
-if not exist "run\update-recovery.py" (
-  if exist "scripts\recover-interrupted-update.py" copy /y "scripts\recover-interrupted-update.py" "run\update-recovery.py" >nul
-)
-if exist "run\update-recovery.py" (
-  "%PROJECT_PYTHON%" "run\update-recovery.py" --project-root "%CD%"
-  if errorlevel 1 (
-    echo The previous update could not be recovered automatically.
-    echo Keep the project files unchanged and restore the latest backup from system settings.
-    pause
-    exit /b 1
+if not "%SMS_UPDATE_RESTART%"=="1" (
+  if not exist "run" mkdir "run"
+  if not exist "run\update-recovery.py" (
+    if exist "scripts\recover-interrupted-update.py" copy /y "scripts\recover-interrupted-update.py" "run\update-recovery.py" >nul
+  )
+  if exist "run\update-recovery.py" (
+    "%PROJECT_PYTHON%" "run\update-recovery.py" --project-root "%CD%"
+    if errorlevel 1 (
+      echo The previous update could not be recovered automatically.
+      echo Keep the project files unchanged and restore the latest backup from system settings.
+      pause
+      exit /b 1
+    )
   )
 )
 
