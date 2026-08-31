@@ -90,21 +90,13 @@ function Start-ManagedServer {
 }
 
 function Wait-ForHealth {
+  $python = Join-Path $ProjectRoot '.venv\Scripts\python.exe'
+  if (-not (Test-Path -LiteralPath $python)) { throw '未找到项目虚拟环境，无法执行更新后的健康检查' }
   for ($index = 0; $index -lt 60; $index += 1) {
-    $response = $null
-    $reader = $null
     try {
-      $request = [System.Net.WebRequest]::Create('http://127.0.0.1:8100/health')
-      $request.Timeout = 3000
-      $request.ReadWriteTimeout = 3000
-      $response = $request.GetResponse()
-      $reader = New-Object System.IO.StreamReader($response.GetResponseStream())
-      if ($reader.ReadToEnd() -match '"status"\s*:\s*"ok"') { return }
+      & $python -c "import json, urllib.request; response = urllib.request.urlopen('http://127.0.0.1:8100/health', timeout=3); payload = json.load(response); raise SystemExit(0 if payload.get('status') == 'ok' else 1)" | Out-Null
+      if ($LASTEXITCODE -eq 0) { return }
     } catch {}
-    finally {
-      if ($reader) { $reader.Dispose() }
-      if ($response) { $response.Dispose() }
-    }
     Start-Sleep -Seconds 1
   }
   throw '更新后的服务未能在 60 秒内通过健康检查'
