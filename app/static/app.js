@@ -1,4 +1,4 @@
-const state = { user: null, students: [], selectedStudentIds: new Set(), selectedRelatedCandidateIds: new Set(), studentPage: 1, studentPageSize: 50, studentTotalPages: 1, currentStudent: null, administrators: [], currentAdministrator: null, savedStudentFilters: [], activeView: 'dashboard', aiConversationId: null, aiSuggestionRequest: 0, highRiskApproval: null, excelPreview: null, importTemplates: [], exportTemplates: [], pendingExport: null, importReportCache: {}, importReportHideTimer: null, importReportTrigger: null, passwordPrompted: false, idleLogoutTimer: null, idleLogoutStarted: false, lastActivityAt: 0, dataScopePreviewTimer: null, dataScopePreviewRequest: 0, latestSystemUpdate: null, systemUpdateTimer: null, systemUpdateAutoChecked: false, systemUpdatePageLoadedAt: Date.now(), systemUpdateRefreshDeadline: null, systemUpdateRefreshTimer: null, lastSystemUpdateNotice: null };
+const state = { user: null, students: [], selectedStudentIds: new Set(), selectedRelatedCandidateIds: new Set(), studentPage: 1, studentPageSize: 50, studentTotalPages: 1, currentStudent: null, administrators: [], currentAdministrator: null, savedStudentFilters: [], activeView: 'dashboard', aiConversationId: null, aiSuggestionRequest: 0, highRiskApproval: null, excelPreview: null, importTemplates: [], exportTemplates: [], pendingExport: null, importReportCache: {}, importReportHideTimer: null, importReportTrigger: null, passwordPrompted: false, idleLogoutTimer: null, idleLogoutStarted: false, lastActivityAt: 0, dataScopePreviewTimer: null, dataScopePreviewRequest: 0, latestSystemUpdate: null, systemUpdateTimer: null, systemUpdateAutoChecked: false, systemUpdatePageLoadedAt: Date.now(), systemUpdateRefreshDeadline: null, systemUpdateRefreshTimer: null, lastSystemUpdateNotice: null, dismissedSystemUpdateNotice: null, systemUpdateRollbackHideTimer: null };
 const IDLE_LOGOUT_TIMEOUT_MS = 5 * 60 * 1000;
 const titles = {
   dashboard: ['工作台', '概览'],
@@ -604,6 +604,16 @@ function systemUpdateStateLabel(stateValue) {
 }
 
 const VISIBLE_SYSTEM_UPDATE_STATES = new Set(['queued', 'downloading', 'validating', 'backing_up', 'applying', 'installing', 'restarting', 'rolling_back', 'completed', 'rolled_back', 'failed']);
+const TERMINAL_SYSTEM_UPDATE_STATES = new Set(['completed', 'rolled_back', 'failed']);
+
+function systemUpdateNoticeKey(updateStatus = {}) {
+  return `${updateStatus.state || 'idle'}:${updateStatus.updated_at || ''}:${updateStatus.job_id || ''}`;
+}
+
+function isFreshSystemUpdateNotice(updateStatus = {}) {
+  const updatedAt = Date.parse(String(updateStatus.updated_at || ''));
+  return !Number.isFinite(updatedAt) || updatedAt > state.systemUpdatePageLoadedAt;
+}
 
 function ensureSystemUpdateFeedback() {
   let liveNotice = document.querySelector('#system-update-live-notice');
@@ -622,7 +632,9 @@ function ensureSystemUpdateFeedback() {
 function renderSystemUpdateFeedback(updateStatus = {}) {
   const {liveNotice, detailProgress} = ensureSystemUpdateFeedback();
   const updateState = String(updateStatus.state || 'idle');
-  const visible = VISIBLE_SYSTEM_UPDATE_STATES.has(updateState);
+  const noticeKey = systemUpdateNoticeKey(updateStatus);
+  const staleTerminalState = TERMINAL_SYSTEM_UPDATE_STATES.has(updateState) && !isFreshSystemUpdateNotice(updateStatus);
+  const visible = VISIBLE_SYSTEM_UPDATE_STATES.has(updateState) && !staleTerminalState && state.dismissedSystemUpdateNotice !== noticeKey;
   const progress = Math.max(0, Math.min(100, Number(updateStatus.progress || 0)));
   const title = systemUpdateStateLabel(updateState);
   const message = String(updateStatus.message || '等待管理员操作');
@@ -637,6 +649,13 @@ function renderSystemUpdateFeedback(updateStatus = {}) {
   document.querySelector('#system-update-progress-percent').textContent = `${progress}%`;
   document.querySelector('#system-update-progress-bar').style.width = `${progress}%`;
   document.querySelector('#system-update-progress-message').textContent = message;
+  if (updateState === 'rolled_back' && !state.systemUpdateRollbackHideTimer) {
+    state.systemUpdateRollbackHideTimer = window.setTimeout(() => {
+      state.dismissedSystemUpdateNotice = noticeKey;
+      state.systemUpdateRollbackHideTimer = null;
+      renderSystemUpdateFeedback(updateStatus);
+    }, 7000);
+  }
   refreshIcons();
 }
 
