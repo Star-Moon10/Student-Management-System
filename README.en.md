@@ -145,41 +145,13 @@ AI_ENABLED=false
 
 Records, Excel import, review, export, roles, auditing, and backups continue to work. AI queries and Word AI extraction will be unavailable or routed to manual review.
 
-## Configuration and Persistence
+## Deployment Notes
 
-Copy `.env.example` to `.env` and replace all example secrets before deployment.
-
-| Setting | Purpose | Requirement |
-| --- | --- | --- |
-| `JWT_SECRET` | Session-token signing | Use a long random value. |
-| `DATABASE_URL` | Database connection | SQLite for Windows local mode; MySQL for Docker. |
-| `COOKIE_SECURE` | HTTPS cookies | Must be `true` behind production HTTPS. |
-| `DATA_ENCRYPTION_KEY` | Backup and sensitive-data encryption | Optional, strongly recommended for production. |
-| `AI_ENABLED` | Enable local AI | Set to `false` when Ollama is unavailable. |
-| `OLLAMA_BASE_URL` / `OLLAMA_MODEL` | Local model connection | Set for the deployment platform. |
-
-| Path | Contents | Backup or migration requirement |
-| --- | --- | --- |
-| `.env` | Secrets and deployment settings | Keep private; never commit it. |
-| `data` or MySQL volume | Database | Must be backed up. |
-| `storage` | Uploaded source documents | Must be backed up. |
-| `backups` | Encrypted backup packages | Copy to independent storage. |
-| `models` / `tools` | Windows local AI model and runtime | Needed only for Windows project-local AI. |
-| `exports` | Generated exports | Retain according to school policy. |
+Copy `.env.example` to `.env` and replace `JWT_SECRET` at minimum. Production deployments need HTTPS, independent backups, and controlled access. Treat the database, source documents, and backup directories as important migration assets. See the [operations guide](docs/OPERATIONS.md) for detailed configuration.
 
 ## Online Updates
 
-Only Windows local deployments use the in-app online updater. Administrators are notified about new GitHub Releases after sign-in, but the system never downloads, replaces files, or restarts without manual confirmation.
-
-Installation requires:
-
-1. An administrator explicitly choosing **View and install**.
-2. Any super administrator account and password.
-3. The confirmation phrase `确认更新系统`.
-
-The updater validates the ZIP, SHA-256 file, and manifest; creates a backup; replaces controlled application code; installs dependencies; and checks service health. It shows download, validation, backup, replacement, installation, and restart progress.
-
-If an update is interrupted before the health check completes, the next normal `start-system.bat` run detects the unfinished transaction and restores the previous code. SQLite deployments also restore their pre-update database copy. Updates do not overwrite `.env`, student data, original documents, backups, models, tools, or stable launcher scripts.
+Only Windows local deployments use the in-app updater. After an administrator confirms an update, the system backs up existing data, shows progress, and restarts the service. If an update is interrupted, the next startup attempts to return the system to a working state. Update Docker deployments through the image or source workflow instead.
 
 ## Security and Operations
 
@@ -190,30 +162,6 @@ If an update is interrupted before the health check completes, the next normal `
 - The AI can produce constrained query, aggregation, and export plans only. Database changes must be made by a human through the UI.
 - Production operators should run backup and restore drills regularly.
 
-## Development and Releases
-
-### Local Development
-
-```powershell
-py -3.12 -m venv .venv
-.\.venv\Scripts\python -m pip install -e '.[dev]'
-$env:DATABASE_URL = 'sqlite:///./data/student_management.db'
-.\.venv\Scripts\python -m uvicorn app.main:app --reload --port 8100
-```
-
-### Release Policy
-
-Normal code changes are pushed to `main` only. They do not automatically create a package or GitHub Release.
-
-When a release is explicitly required:
-
-1. Change `VERSION` using `X.Y.Z`, for example `1.0.1`.
-2. The final `Z` segment is limited to `0-9`; after `v1.0.9`, use `v1.1.0`.
-3. Commit the code and create the matching tag, such as `v1.0.1`.
-4. Manually run the **Publish controlled update** GitHub Actions workflow and provide that tag.
-
-The workflow audits the public source, runs tests, builds the controlled update package, and uploads the ZIP plus SHA-256 file. See [docs/RELEASING.md](docs/RELEASING.md).
-
 ## Documentation
 
 - [Chinese README](README.md)
@@ -221,6 +169,8 @@ The workflow audits the public source, runs tests, builds the controlled update 
 - [Production deployment](docs/PRODUCTION.md)
 - [Release and online updates](docs/RELEASING.md)
 - [Release history](https://github.com/Star-Moon10/Student-Management-System/releases)
+
+Use the documents above for detailed deployment, configuration, and maintenance procedures.
 
 ## License and Disclaimer
 

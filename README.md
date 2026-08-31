@@ -154,41 +154,13 @@ AI_ENABLED=false
 
 学生档案、Excel 导入、审核、导出、权限、审计和备份仍可正常使用；AI 查询和 Word AI 识别会显示为降级或转入人工处理。
 
-## 配置与数据持久化
+## 部署提示
 
-复制 `.env.example` 为 `.env` 并替换所有示例密钥。至少应配置：
-
-| 配置 | 用途 | 要求 |
-| --- | --- | --- |
-| `JWT_SECRET` | 登录令牌签名 | 使用长随机字符串，不能使用示例值。 |
-| `DATABASE_URL` | 数据库连接 | Windows 默认 SQLite；Docker 默认 MySQL。 |
-| `COOKIE_SECURE` | HTTPS Cookie | 生产 HTTPS 必须为 `true`。 |
-| `DATA_ENCRYPTION_KEY` | 备份与敏感内容加密 | 可选，生产环境建议设置并妥善保管。 |
-| `AI_ENABLED` | 是否启用本地 AI | 没有 Ollama 时设为 `false`。 |
-| `OLLAMA_BASE_URL` / `OLLAMA_MODEL` | 模型连接 | 按部署平台填写。 |
-
-| 路径 | 内容 | 迁移或备份要求 |
-| --- | --- | --- |
-| `.env` | 密钥和部署配置 | 必须私下保存，绝不提交 Git。 |
-| `data` 或 MySQL 卷 | 数据库 | 必须备份。 |
-| `storage` | 上传的原始资料 | 必须备份。 |
-| `backups` | 加密备份包 | 建议复制到独立存储。 |
-| `models` / `tools` | Windows 项目内 AI 模型与运行时 | 仅 Windows 本地 AI 需要。 |
-| `exports` | 生成的导出文件 | 按学校保留策略处理。 |
+复制 `.env.example` 为 `.env` 后，至少替换 `JWT_SECRET`。生产环境需要 HTTPS、独立备份和受控访问。数据库、原始资料和备份目录都属于重要资产，迁移系统时必须一起保留。详细配置说明见 [运维与迁移指南](docs/OPERATIONS.md)。
 
 ## 在线更新
 
-仅 Windows 本地部署支持系统内在线更新。管理员或超级管理员登录后会自动检查 GitHub Release；系统只提示可用版本，绝不会自行下载、替换或重启。
-
-安装需要：
-
-1. 管理员主动点击“查看并安装”。
-2. 输入任一超级管理员账号和密码。
-3. 输入确认口令 `确认更新系统`。
-
-更新器会校验 ZIP、SHA-256 和文件清单，先创建加密备份，再替换应用代码、安装依赖并执行健康检查。更新过程显示下载、校验、备份、替换、安装和重启进度。
-
-如果更新器在完成健康检查前崩溃、断电或被强制结束，下一次正常运行 `start-system.bat` 会检测未完成事务并恢复更新前代码；SQLite 部署还会恢复更新前数据库副本。更新包不会覆盖 `.env`、学生数据、原始资料、备份、模型、工具或稳定启动脚本。
+仅 Windows 本地部署支持系统内在线更新。管理员确认安装后，系统会备份现有数据、显示更新进度并重启服务；异常中断时会在下一次启动时尝试恢复到可用状态。Docker 部署请按镜像或代码更新流程维护。
 
 ## 安全与运维
 
@@ -199,30 +171,6 @@ AI_ENABLED=false
 - AI 只能生成受约束的查询、统计和导出计划；数据库修改必须由人工在界面完成。
 - 更新、备份和恢复均有可见状态。生产环境仍应定期执行恢复演练。
 
-## 开发与发布
-
-### 本地开发
-
-```powershell
-py -3.12 -m venv .venv
-.\.venv\Scripts\python -m pip install -e '.[dev]'
-$env:DATABASE_URL = 'sqlite:///./data/student_management.db'
-.\.venv\Scripts\python -m uvicorn app.main:app --reload --port 8100
-```
-
-### 发布版本
-
-日常改动只提交并推送 `main`，不会自动打包或发布。
-
-需要发布时：
-
-1. 修改 `VERSION`，使用 `X.Y.Z`，例如 `1.0.1`。
-2. 最后一位 `Z` 仅允许 `0-9`；因此 `v1.0.9` 的下一版必须是 `v1.1.0`。
-3. 提交代码并创建同名标签，例如 `v1.0.1`。
-4. 在 GitHub Actions 手动运行 **Publish controlled update**，填写该标签。
-
-发布工作流会执行源码安全审计、测试和更新包构建，再上传 ZIP 与 SHA-256。详见 [docs/RELEASING.md](docs/RELEASING.md)。
-
 ## 项目文档
 
 - [英文 README](README.en.md)
@@ -230,6 +178,8 @@ $env:DATABASE_URL = 'sqlite:///./data/student_management.db'
 - [生产部署说明](docs/PRODUCTION.md)
 - [发布与在线更新](docs/RELEASING.md)
 - [更新记录](https://github.com/Star-Moon10/Student-Management-System/releases)
+
+部署、配置和维护的详细操作请以以上文档为准。
 
 ## 许可与免责声明
 
