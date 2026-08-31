@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>登录 | 学籍档案</title>
+    <link rel="stylesheet" href="/static/app.css">
+  </head>
+  <body class="login-body">
+    <main class="login-layout">
+      <section class="login-aside" aria-hidden="true">
+        <div class="school-mark large-mark">学</div>
+        <div class="aside-lines"></div>
+        <p>STUDENT RECORDS</p>
+      </section>
+      <section class="login-panel">
+        <div class="login-content">
+          <div class="brand-line"><span class="school-mark">学</span><span>学籍档案</span></div>
+          <h1>登录</h1>
+          <form id="login-form" class="form-stack">
+            <label>用户名<input name="username" autocomplete="username" required minlength="3"></label>
+            <label>密码<input name="password" type="password" autocomplete="current-password" required minlength="8"></label>
+            <label>二次验证代码（已启用时必填）<input name="mfa_code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}"></label>
+            <p class="form-error" id="login-error" role="alert"></p>
+            <button class="button primary full" type="submit"><i data-lucide="log-in"></i>进入系统</button>
+          </form>
+        </div>
+      </section>
+    </main>
+    <script src="/static/vendor/lucide.min.js"></script>
+    <script src="/static/login.js"></script>
+  </body>
+</html>

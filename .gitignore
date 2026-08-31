@@ -1,0 +1,45 @@
+# Local configuration and credentials. Keep only the redacted template.
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.token
+*.secret
+secrets/
+
+# Runtime state and privacy-sensitive institutional data.
+data/
+storage/
+exports/
+backups/
+resource/
+models/
+tools/
+run/
+tmp/
+*.db
+*.sqlite
+*.sqlite3
+
+# Local Python and editor state.
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+*.egg-info/
+.mypy_cache/
+.ruff_cache/
+.vscode/
+.idea/
+
+# Generated release/update artifacts.
+dist/
+dist-*/
+release-staging/
+update-staging/
+*.zip
+*.zip.enc
+*.sha256

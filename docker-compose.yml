@@ -1,0 +1,35 @@
+services:
+  mysql:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: student_management
+      MYSQL_USER: sms
+      MYSQL_PASSWORD: sms_change_me
+      MYSQL_ROOT_PASSWORD: root_change_me
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-proot_change_me"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_URL: mysql+pymysql://sms:sms_change_me@mysql:3306/student_management?charset=utf8mb4
+    ports:
+      - "8100:8000"
+    volumes:
+      - ./storage:/app/storage
+      - ./exports:/app/exports
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+volumes:
+  mysql-data:

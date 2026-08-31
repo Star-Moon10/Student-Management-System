@@ -1,0 +1,16 @@
+# Runtime dependencies pinned for controlled online updates.
+alembic==1.18.5
+cryptography==45.0.7
+fastapi==0.139.2
+httpx==0.28.1
+Jinja2==3.1.6
+openpyxl==3.1.5
+passlib==1.7.4
+pydantic==2.13.4
+pydantic-settings==2.14.2
+PyMySQL==1.2.0
+python-docx==1.2.0
+python-jose[cryptography]==3.5.0
+python-multipart==0.0.32
+SQLAlchemy==2.0.51
+uvicorn[standard]==0.51.0
