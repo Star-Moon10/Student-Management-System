@@ -1,15 +1,17 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-theme="light">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>学籍档案</title>
-    <link rel="stylesheet" href="/static/app.css?v=20260901-2">
+    <script src="/static/theme.js?v=20260902-1"></script>
+    <link rel="stylesheet" href="/static/app.css?v=20260902-1">
   </head>
   <body class="app-body">
     <div class="app-shell">
       <aside class="sidebar">
-        <a class="brand" href="#dashboard" data-view-link="dashboard"><span class="school-mark">学</span><span>学籍档案</span></a>
+        <button class="sidebar-toggle icon-button" id="sidebar-toggle" type="button" title="折叠侧边栏" aria-label="折叠或展开侧边栏"><span class="toggle-icon toggle-collapse"><i data-lucide="panel-left-close"></i></span><span class="toggle-icon toggle-expand"><i data-lucide="panel-left-open"></i></span></button>
+        <a class="brand" href="#dashboard" data-view-link="dashboard"><span class="school-mark">学</span><span class="brand-name">学籍档案</span></a>
         <nav class="nav-list" aria-label="主导航">
           <p class="nav-section-label">工作台</p>
           <button class="nav-item active" data-view="dashboard"><i data-lucide="layout-dashboard"></i><span>概览</span></button>
@@ -30,7 +32,7 @@
         <header class="topbar">
           <button class="icon-button mobile-menu" id="mobile-menu" title="打开导航"><i data-lucide="menu"></i></button>
           <div><p class="eyebrow" id="view-eyebrow">工作台</p><h1 id="view-title">概览</h1></div>
-          <div class="topbar-actions"><button class="icon-button" id="refresh-button" title="刷新数据"><i data-lucide="refresh-cw"></i></button><button class="icon-button" id="account-security-button" title="账号安全"><i data-lucide="shield"></i></button><button class="user-chip" id="logout-button" title="退出登录"><span class="avatar" id="user-avatar">管</span><span id="user-name">加载中</span><i data-lucide="log-out"></i></button></div>
+          <div class="topbar-actions"><button class="icon-button theme-toggle" id="theme-toggle" type="button" title="切换深色/浅色模式" aria-label="切换深色或浅色模式"><span class="theme-icon theme-icon-moon"><i data-lucide="moon"></i></span><span class="theme-icon theme-icon-sun"><i data-lucide="sun"></i></span></button><button class="icon-button" id="refresh-button" title="刷新数据"><i data-lucide="refresh-cw"></i></button><button class="icon-button" id="account-security-button" title="账号安全"><i data-lucide="shield"></i></button><button class="user-chip" id="logout-button" title="退出登录"><span class="avatar" id="user-avatar">管</span><span id="user-name">加载中</span><i data-lucide="log-out"></i></button></div>
         </header>
         <main class="content">
           <section class="view active" id="view-dashboard">
@@ -116,5 +118,6 @@
     <div class="toast" id="toast" role="status"></div>
     <script src="/static/vendor/lucide.min.js"></script>
     <script src="/static/app.js?v=20260901-4"></script>
+
   </body>
 </html>
