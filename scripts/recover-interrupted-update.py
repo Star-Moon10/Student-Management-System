@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Any
 
 
-RUNTIME_DIRECTORIES = ("app", "scripts", "docs")
+RUNTIME_DIRECTORIES = ("app", "desktop", "scripts", "docs")
 RUNTIME_FILES = (
     ".env.example",
     "Dockerfile",

@@ -569,6 +569,7 @@ input[type="file"] { padding: 7px; color: var(--muted); }
 .system-update-current.update-status-failed { border-left-color: var(--danger); background: #fff8f7; }
 .system-update-current.update-status-completed { border-left-color: #57a980; background: #f2faf5; }
 .system-update-current.update-status-downloading, .system-update-current.update-status-validating, .system-update-current.update-status-backing_up, .system-update-current.update-status-applying, .system-update-current.update-status-installing, .system-update-current.update-status-restarting { border-left-color: #557fb8; background: #f5f8fc; }
+#system-update-section, #system-update-available-dialog, #system-update-live-notice { display: none !important; }
 .system-update-release { margin-bottom: 14px; }
 .system-update-release-card { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; padding: 14px; border: 1px solid #ccdce9; border-left: 3px solid #557fb8; border-radius: 6px; background: #f7faff; }
 .system-update-release-card h3 { margin: 4px 0 6px; font-size: 16px; }

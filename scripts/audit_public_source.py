@@ -8,7 +8,7 @@ import sys
 from pathlib import Path
 
 
-PUBLIC_DIRECTORIES = ("app", "scripts", "docs", "tests", ".github")
+PUBLIC_DIRECTORIES = ("app", "desktop", "scripts", "docs", "tests", ".github")
 PUBLIC_FILES = {
     ".env.example",
     ".gitattributes",
@@ -25,7 +25,7 @@ PUBLIC_FILES = {
     "start-system.bat",
     "stop-system.bat",
 }
-RUNTIME_DIRECTORIES = ("app", "scripts", "docs")
+RUNTIME_DIRECTORIES = ("app", "desktop", "scripts", "docs")
 RUNTIME_FILES = {
     ".env.example",
     "Dockerfile",

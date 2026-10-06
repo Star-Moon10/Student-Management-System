@@ -41,6 +41,8 @@ start-system.bat
 
 首次运行 `setup.bat`，日常只运行 `start-system.bat`。浏览器会打开 `http://127.0.0.1:8100`。
 
+如需图形化管理本地服务，可运行桌面控制中心。它负责启动、停止、日志、诊断、安装修复和本地软件更新；学生业务仍在浏览器中打开。
+
 ### Docker Compose
 
 ```bash

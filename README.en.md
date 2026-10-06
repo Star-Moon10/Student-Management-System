@@ -41,6 +41,8 @@ start-system.bat
 
 Run `setup.bat` only for the first setup. For everyday use, run `start-system.bat` and open `http://127.0.0.1:8100`.
 
+For graphical local service management, build or run the desktop control center. It handles startup, shutdown, logs, diagnostics, repair, and local software updates; the student business UI continues to open in the browser.
+
 ### Docker Compose
 
 ```bash

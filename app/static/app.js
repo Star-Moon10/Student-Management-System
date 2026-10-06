@@ -587,7 +587,7 @@ async function loadSystemSettings() {
   form.elements.new_password.value = '';
   form.elements.confirm_password.value = '';
   document.querySelector('#system-settings-error').textContent = '';
-  const tasks = [loadAdministrators(), loadDataScopes(), loadSystemUpdate()];
+  const tasks = [loadAdministrators(), loadDataScopes()];
   if (isSuperAdmin) tasks.push(loadBackups(), loadSystemInfo(), loadSystemControls(), loadImportTemplates(), loadExportTemplates());
   await Promise.all(tasks);
 }
@@ -2628,16 +2628,6 @@ function bindEvents() {
   document.querySelector('#confirm-export-preview').addEventListener('click', executePendingExport);
   document.querySelector('#export-preview-dialog').addEventListener('close', () => { state.pendingExport = null; });
   document.querySelector('#system-settings-form').addEventListener('submit', saveSystemSettings);
-  document.querySelector('#check-system-update').addEventListener('click', () => loadSystemUpdate(true).then(() => toast('已完成 GitHub Release 检查。')).catch((errorObject) => toast(errorObject.message, true)));
-  document.querySelector('#system-update-config-form').addEventListener('submit', saveSystemUpdateConfiguration);
-  document.querySelector('#system-update-execute-form').addEventListener('submit', startSystemUpdate);
-  document.querySelector('#system-update-offline-form').addEventListener('submit', startOfflineSystemUpdate);
-  document.querySelector('#system-update-available-later').addEventListener('click', () => document.querySelector('#system-update-available-dialog').close());
-  document.querySelector('#system-update-available-install').addEventListener('click', () => {
-    document.querySelector('#system-update-available-dialog').close();
-    setView('settings');
-    window.setTimeout(() => document.querySelector('#system-update-section')?.scrollIntoView({behavior:'smooth', block:'start'}), 120);
-  });
   document.querySelector('#open-high-risk-settings').addEventListener('click', openHighRiskSettings);
   document.querySelector('#high-risk-auth-form').addEventListener('submit', authorizeHighRiskSettings);
   document.querySelector('#high-risk-clear-students').addEventListener('click', clearAllStudentsHighRisk);
@@ -2694,9 +2684,6 @@ async function boot() {
     const loginNotice = window.sessionStorage.getItem('login-security-notice');
     if (loginNotice) { window.sessionStorage.removeItem('login-security-notice'); toast(loginNotice); }
     await Promise.all([refreshAll(), loadAiStatus(), loadAiConversation(), loadSavedStudentFilters()]);
-    void autoCheckSystemUpdate();
-    void pollSystemUpdateNotice();
-    window.setInterval(pollSystemUpdateNotice, 3000);
     window.setInterval(loadAiStatus, 30000);
     refreshIcons();
   } catch (errorObject) {

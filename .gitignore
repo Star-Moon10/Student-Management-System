@@ -37,6 +37,9 @@ __pycache__/
 
 # Generated release/update artifacts.
 dist/
+build/
+*.spec
+design-previews/
 dist-*/
 release-staging/
 update-staging/
